@@ -1,0 +1,17 @@
+#:kivy 1.10.1
+
+<MainPage>:
+    Label:
+        text: "Welcome, you look beautiful today!"
+        font_size: self.parent.width * 0.02
+        size_hint: None, None
+        size: self.texture_size
+        pos_hint: {'center_x': 0.5, 'top': 0.9}
+    
+    Weather:
+        size_hint: 0.25, 1/4
+        pos_hint: {"x": 0, "top":1}
+
+<GridLayout@Weather>:
+    top: self.parent.top
+    x: self.parent.x
