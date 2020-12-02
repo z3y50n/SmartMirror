@@ -9,9 +9,9 @@
         pos_hint: {'center_x': 0.5, 'top': 0.9}
     
     Weather:
-        size_hint: 0.25, 1/4
+        size_hint: 0.3, 0.3
         pos_hint: {"x": 0, "top":1}
 
-<GridLayout@Weather>:
-    top: self.parent.top
+<BoxLayout@Weather>:
+    top: self.parent.top 
     x: self.parent.x

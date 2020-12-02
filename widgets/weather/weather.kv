@@ -1,12 +1,21 @@
 #:kivy 1.10.1
 
 <Weather>:
-    GridLayout:
-        cols: 2
+    BoxLayout:
+        orientation: "vertical"
         size: self.parent.width, self.parent.height
+        GridLayout:
+            
+            cols: 2
+            Label:
+                text: "25°C"
+                font_size: self.width * 0.2
+            Image:
+                source: "/home/dimitris/Auth/Diploma/SmartMirror/assets/sun.png"
+                size_hint: 0.3, 0.3
         Label:
-            text: "25°C"
-            font_size: self.width * 0.2
-        Image:
-            source: "/home/dimitris/Auth/Diploma/SmartMirror/assets/sun.png"
-            size_hint: 0.3, 0.3
+            text: "The weather today is sunny with no clouds and low possibility of rain and something else to make the sentence extra long"
+            text_size: 3/4 * self.parent.width, None
+            size_hint: 3/4, None
+            height: self.texture_size[1]
+            pos_hint: {'center_x': 0.5, 'y': 1}
