@@ -6,13 +6,13 @@
         size: self.parent.width, self.parent.height
         padding: [0, 30, 0, 0]
         Label:
-            text: "12:03"
+            text: root.hour
             size_hint: 1, None
             font_size: self.width * 0.2
             height: self.texture_size[1] + 10
             pos_hint: {"center_x": 0.5, "top": 1}
         Label:
-            text: "Monday    Dec 07, 2020"
+            text: root.date
             size_hint: 1, None
             font_size: self.width * 0.04
             height: self.texture_size[1]
