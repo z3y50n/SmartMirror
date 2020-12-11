@@ -4,17 +4,24 @@
     BoxLayout:
         orientation: "vertical"
         size: self.parent.width, self.parent.height
+        padding: [0, 50, 0, 0]
         GridLayout:
             cols: 2
             Label:
-                text: "25°C"
+                text: root.temperature + "°C"
                 font_size: self.width * 0.2
-            Image:
-                source: "/home/dimitris/Auth/Diploma/SmartMirror/assets/sun.png"
-                size_hint: 0.3, 0.3
+            AsyncImage:
+                source: root.icon
+                size_hint: 0.25, 0.25
+                allow_stretch: True
+        Widget:
+        
         Label:
-            text: "The weather today is sunny with no clouds and low possibility of rain and something else to make the sentence extra long"
-            text_size: 3/4 * self.parent.width, None
-            size_hint: 3/4, None
+            text: root.description
+            size_hint: 1, None
+            font_size: self.width * 0.05
             height: self.texture_size[1]
-            pos_hint: {'center_x': 0.5, 'y': 1}
+            halign: "center"
+            pos_hint: {"center_x": 0.5, "top": 1}
+            
+        Widget:

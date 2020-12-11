@@ -6,6 +6,7 @@ from kivy.properties import StringProperty
 
 import datetime
 
+
 class MirrorClock(Widget):
     hour = StringProperty("")
     date = StringProperty("")
