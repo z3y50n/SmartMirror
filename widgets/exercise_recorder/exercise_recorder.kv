@@ -1,0 +1,25 @@
+#:kivy 1.10.1
+
+<ExerciseRecorder>:
+    BoxLayout:
+        orientation: 'vertical'
+        size: root.width, root.height
+        Renderer:
+        FloatLayout:
+            size_hint_y: 0.1
+            canvas: 
+                Color:
+                    rgb: 0.1, 0.1, 0.1, 0.7
+                Rectangle:
+                    size: self.size
+                    pos: self.pos
+            BoxLayout:
+                orientation: 'horizontal'
+                size_hint_x: 0.7
+                pos_hint: {'center_x': 0.5}
+                Button:
+                    text: 'Record'
+                    on_release: root.predict()
+                Button:
+                    text: 'Pause'
+                    on_release: root.renderer.change_mesh()
