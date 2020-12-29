@@ -1,10 +1,10 @@
-from kivy.uix.widget import Widget
-from kivy.base import runTouchApp
-from kivy.lang import Builder
-from kivy.clock import Clock
-from kivy.properties import StringProperty
-
 import datetime
+
+from kivy.base import runTouchApp
+from kivy.clock import Clock
+from kivy.lang import Builder
+from kivy.properties import StringProperty
+from kivy.uix.widget import Widget
 
 
 class MirrorClock(Widget):

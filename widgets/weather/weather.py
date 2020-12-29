@@ -2,11 +2,11 @@ import json
 import os
 import requests
 
-from kivy.uix.widget import Widget
-from kivy.properties import StringProperty
-from kivy.clock import Clock
 from kivy.base import runTouchApp
+from kivy.clock import Clock
 from kivy.lang import Builder
+from kivy.properties import StringProperty
+from kivy.uix.widget import Widget
 
 
 CONFIG_PATH = os.path.join(os.path.dirname(

@@ -1,12 +1,12 @@
 import os
 
 from kivy.app import App
-from kivy.lang import Builder
 from kivy.core.window import Window
+from kivy.lang import Builder
 from kivy.uix.floatlayout import FloatLayout
 
-from widgets.weather.weather import Weather
 from widgets.clock.clock import MirrorClock
+from widgets.weather.weather import Weather
 
 WIDGET_PATH = os.path.join(os.path.dirname(
     os.path.abspath(__file__)), 'widgets/')

@@ -1,4 +1,5 @@
 {
+    "launch_phrase": "mirror mirror on the wall",
     "WEATHER_API":{
         "api_key": "26be86d9cd70b50cb932ddf568ebac0c",
         "city_id": "8133841",
