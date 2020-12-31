@@ -1,4 +1,6 @@
 import os
+import multiprocessing
+import threading
 
 from kivy.app import App
 from kivy.core.window import Window
@@ -32,8 +34,8 @@ class SmartMirrorApp(App):
             "close_phrase": "thank you mirror"
         })
         config.setdefaults("WeatherAPI", {
-            "api_key": "26be86d9cd70b50cb932ddf568ebac0c",
-            "city_id": "8133841",
+            "api_key": "API_KEY",
+            "city_id": "CITY_ID",
             "update_interval": 1800
         })
 
@@ -48,6 +50,10 @@ if __name__ == "__main__":
         Builder.load_file(os.path.join(WIDGET_PATH, kv, f"{kv}.kv"))
 
     # Window.fullscreen = 'auto'
+    ps1 = multiprocessing.Process(target = Interface().authenticate)
+    thread1 = threading.Thread(target=Interface().authenticate)
+    thread1.daemon = True
+    thread1.start()
     SmartMirrorApp().run()
-
-
+    # ps1.terminate()
+    thread1.join()
