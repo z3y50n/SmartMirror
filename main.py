@@ -10,7 +10,7 @@ from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.settings import SettingsWithSidebar
 
 from interface import Interface
-from settingsjson import settings_json
+from settingsjson import settings_json, default_json
 from widgets.clock.clock import MirrorClock
 from widgets.weather.weather import Weather
 
@@ -29,15 +29,8 @@ class SmartMirrorApp(App):
         return MainPage()
 
     def build_config(self, config):
-        config.setdefaults("Speech", {
-            "launch_phrase": "mirror mirror on the wall",
-            "close_phrase": "thank you mirror"
-        })
-        config.setdefaults("WeatherAPI", {
-            "api_key": "API_KEY",
-            "city_id": "CITY_ID",
-            "update_interval": 1800
-        })
+        config.setdefaults("Speech", default_json["Speech"])
+        config.setdefaults("WeatherAPI", default_json["WeatherAPI"])
 
     def build_settings(self, settings):
         settings.add_json_panel("Custom Settings",
@@ -50,10 +43,11 @@ if __name__ == "__main__":
         Builder.load_file(os.path.join(WIDGET_PATH, kv, f"{kv}.kv"))
 
     # Window.fullscreen = 'auto'
-    ps1 = multiprocessing.Process(target = Interface().authenticate)
-    thread1 = threading.Thread(target=Interface().authenticate)
+    # ps1 = multiprocessing.Process(target = Interface().authenticate)
+    gui = SmartMirrorApp()
+    thread1 = threading.Thread(target=Interface(gui).authenticate)
     thread1.daemon = True
     thread1.start()
-    SmartMirrorApp().run()
+    gui.run()
     # ps1.terminate()
-    thread1.join()
+    # thread1.join()

@@ -1,5 +1,17 @@
 import json
 
+default_json = {
+    "Speech": {
+        "launch_phrase": "mirror mirror on the wall",
+        "close_phrase": "thank you mirror"
+    },
+    "WeatherAPI": {
+        "api_key": "API_KEY",
+        "city_id": "CITY_ID",
+        "update_interval": 1800
+    }
+}
+
 settings_json = json.dumps([
     {
         "type": "title",
