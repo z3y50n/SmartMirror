@@ -1,6 +1,7 @@
 **/__pycache__/
 *config.py
+*smartmirror.ini
 
+**/models/
 .vscode/
 docs/
-*smartmirror.ini
