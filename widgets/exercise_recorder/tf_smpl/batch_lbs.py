@@ -50,7 +50,7 @@ def batch_rodrigues(theta, name=None):
         # r = tf.expand_dims(tf.div(theta, tf.expand_dims(angle + 1e-8, -1)), -1)
         # angle = tf.expand_dims(tf.norm(theta, axis=1) + 1e-8, -1)
         angle = tf.expand_dims(tf.norm(theta + 1e-8, axis=1), -1)
-        r = tf.expand_dims(tf.div(theta, angle), -1)
+        r = tf.expand_dims(tf.math.divide(theta, angle), -1)
 
         angle = tf.expand_dims(angle, -1)
         cos = tf.cos(angle)
