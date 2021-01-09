@@ -5,14 +5,17 @@
         orientation: "vertical"
         size: self.parent.width, self.parent.height
         padding: [0, 50, 0, 0]
+        top: self.parent.top
+        x: self.parent.x
         GridLayout:
             cols: 2
             Label:
                 text: root.temperature + "°C"
                 font_size: self.width * 0.2
+                
             AsyncImage:
                 source: root.icon
-                size_hint: 0.25, 0.25
+                size_hint: 0.7, 0.25
                 allow_stretch: True
         Widget:
         

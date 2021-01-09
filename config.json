@@ -1,7 +1,0 @@
-{
-    "WEATHER_API":{
-        "api_key": "26be86d9cd70b50cb932ddf568ebac0c",
-        "city_id": "8133841",
-        "update_interval": 1800
-    }
-}

@@ -1,16 +1,17 @@
+from configparser import ConfigParser
 import json
 import os
 import requests
 
-from kivy.uix.widget import Widget
-from kivy.properties import StringProperty
-from kivy.clock import Clock
 from kivy.base import runTouchApp
+from kivy.clock import Clock
 from kivy.lang import Builder
+from kivy.properties import StringProperty
+from kivy.uix.widget import Widget
 
 
-CONFIG_PATH = os.path.join(os.path.dirname(
-    os.path.abspath("config.json")), "config.json")
+CONFIG_PATH = os.path.join(os.path.abspath(os.path.join(
+    __file__, os.path.pardir, os.path.pardir, os.path.pardir)), "smartmirror.ini")
 
 
 class Weather(Widget):
@@ -20,15 +21,16 @@ class Weather(Widget):
 
     def __init__(self, **kwargs):
         super(Weather, self).__init__(**kwargs)
-        
-        # Import config file
-        with open(CONFIG_PATH, "r") as f:
-            self.cfg = json.load(f)['WEATHER_API']
+
+        config = ConfigParser()
+        config.read(CONFIG_PATH)
+        self.cfg = config['WeatherAPI']
 
         self.get_weather(0)
 
         # Update Temperature Every Set Interval
-        Clock.schedule_interval(self.get_weather, self.cfg['update_interval'])
+        Clock.schedule_interval(
+            self.get_weather, int(self.cfg['update_interval']))
 
     def get_weather(self, dt):
         r = requests.get(
@@ -41,6 +43,7 @@ class Weather(Widget):
 
 
 if __name__ == "__main__":
-
+    print(os.path.join(os.path.dirname(os.path.dirname(
+        os.path.dirname(os.path.abspath(__file__)))), "config.json"))
     Builder.load_file("weather.kv")
     runTouchApp(Weather())
