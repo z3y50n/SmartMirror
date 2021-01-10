@@ -39,7 +39,7 @@ class MeshData(object):
         verts : array_like (N x 3)
             The 3D coordinates of the N vertices of the object
         faces: array_like (F x 3)
-            The F triangles described by the 3 vertices' indices
+            The F triangles, each described by the 3 vertices' indices
 
         Returns
         -------
