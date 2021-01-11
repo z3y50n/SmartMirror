@@ -8,7 +8,7 @@ from kivy.lang import Builder
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.settings import SettingsWithSidebar
 
-from interface import MainController
+from main_controller import MainController
 from settingsjson import settings_json, default_json
 from widgets.clock.clock import MirrorClock
 from widgets.weather.weather import Weather
