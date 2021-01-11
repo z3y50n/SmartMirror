@@ -19,7 +19,7 @@ class MainController(threading.Thread):
         self._s = speech.Speech(
             config["Speech"]["launch_phrase"], config["Speech"]["close_phrase"])
         self._gui = gui
-
+        
         self._running = threading.Event()
         self.daemon = True
         self.start()
@@ -37,7 +37,7 @@ class MainController(threading.Thread):
 
     def _authenticate(self):
         while not self._s.check_launch_phrase():
-            self._s.speak()
+            self._s.speak(self._gui.root.ids['status_label'])
         print("You gained access")
 
     def _decide_action(self):
