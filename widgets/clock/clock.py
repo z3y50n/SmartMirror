@@ -8,8 +8,8 @@ from kivy.uix.widget import Widget
 
 
 class MirrorClock(Widget):
-    hour = StringProperty("")
-    date = StringProperty("")
+    _hour = StringProperty("")
+    _date = StringProperty("")
 
     def __init__(self, **kwargs):
         super(MirrorClock, self).__init__(**kwargs)
@@ -18,8 +18,8 @@ class MirrorClock(Widget):
 
     def update_time(self, dt):
         time = datetime.datetime.now()
-        self.hour = f"{time.strftime('%H')}:{time.strftime('%M')}"
-        self.date = f"{time.strftime('%A')} {time.strftime('%b')} {time.strftime('%d')} {time.strftime('%Y')}"
+        self._hour = f"{time.strftime('%H')}:{time.strftime('%M')}"
+        self._date = f"{time.strftime('%A')} {time.strftime('%b')} {time.strftime('%d')} {time.strftime('%Y')}"
 
 
 if __name__ == "__main__":

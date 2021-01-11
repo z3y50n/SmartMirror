@@ -8,13 +8,13 @@
         top: self.parent.top 
         x: self.parent.x
         Label:
-            text: root.hour
+            text: root._hour
             size_hint: 1, None
             font_size: self.width * 0.2
             height: self.texture_size[1] + 10
             pos_hint: {"center_x": 0.5, "top": 1}
         Label:
-            text: root.date
+            text: root._date
             size_hint: 1, None
             font_size: self.width * 0.04
             height: self.texture_size[1]
