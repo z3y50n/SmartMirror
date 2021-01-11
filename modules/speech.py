@@ -1,3 +1,4 @@
+import asyncio
 from configparser import ConfigParser
 import os
 from kivy import config

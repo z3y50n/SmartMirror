@@ -10,17 +10,20 @@
         GridLayout:
             cols: 2
             Label:
-                text: root.temperature + "°C"
+                id: temp_label
+                text: root._temperature + "°C"
                 font_size: self.width * 0.2
                 
             AsyncImage:
-                source: root.icon
+                id: temp_icon
+                source: root._icon
                 size_hint: 0.7, 0.25
                 allow_stretch: True
         Widget:
         
         Label:
-            text: root.description
+            id: temp_desc
+            text: root._description
             size_hint: 1, None
             font_size: self.width * 0.05
             height: self.texture_size[1]

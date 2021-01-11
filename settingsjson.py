@@ -57,14 +57,3 @@ settings_json = json.dumps([
         "key": "update_interval"
     }
 ])
-
-
-# {
-#     "launch_phrase": "mirror mirror on the wall",
-#     "close_phrase": "thank you mirror",
-#     "WEATHER_API":{
-#         "api_key": "26be86d9cd70b50cb932ddf568ebac0c",
-#         "city_id": "8133841",
-#         "update_interval": 1800
-#     }
-# }

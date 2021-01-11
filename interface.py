@@ -1,23 +1,41 @@
+import os
+
+from configparser import ConfigParser
+import os
+import threading
+
 from modules import speech
 
+CONFIG_PATH = os.path.join(os.path.abspath(
+    os.path.dirname(__file__)), "smartmirror.ini")
 
-class Interface:
 
+class MainController(threading.Thread):
     def __init__(self, gui):
-        self._s = speech.Speech("mirror mirror on the wall", "thank you mirror")
+        super(MainController, self).__init__()
+        config = ConfigParser()
+        config.read(CONFIG_PATH)
+
+        self._s = speech.Speech(
+            config["Speech"]["launch_phrase"], config["Speech"]["close_phrase"])
         self._gui = gui
 
-    def authenticate(self):
+        self.daemon = True
+        self.start()
+
+    def run(self):
+        self._authenticate()
+        self.decide_action()
+
+    def _authenticate(self):
         while not self._s.check_launch_phrase():
             self._s.speak()
         print("You gained access")
-        self._gui.open_settings()
 
-    def decide_action(self):
-        self._s.speak()
-        print("decide action")
+    def _decide_action(self):
+        while not self._s.check_close_phrase():
+            self._s.speak()
 
 
 if __name__ == "__main__":
-    interface = Interface()
-    interface.start()
+    interface = MainController()
