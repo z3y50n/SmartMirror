@@ -20,12 +20,20 @@ class MainController(threading.Thread):
             config["Speech"]["launch_phrase"], config["Speech"]["close_phrase"])
         self._gui = gui
 
+        self._running = threading.Event()
         self.daemon = True
         self.start()
 
+    def pause(self):
+        self._running.clear()
+    
+    def resume(self):
+        self._running.set()
+
     def run(self):
+        self.resume()
         self._authenticate()
-        self.decide_action()
+        self._decide_action()
 
     def _authenticate(self):
         while not self._s.check_launch_phrase():
@@ -34,6 +42,7 @@ class MainController(threading.Thread):
 
     def _decide_action(self):
         while not self._s.check_close_phrase():
+            self._running.wait()
             self._s.speak()
 
 
