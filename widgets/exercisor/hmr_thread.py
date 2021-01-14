@@ -1,109 +1,14 @@
 import errno
 import os
-import numpy as np
-import cv2
 import threading
+
+import cv2
+import numpy as np
 import tensorflow as tf
 
 from ml_thread import MLThread
-from models import HMR
+from hmr_model import HMR
 from preprocess import process_image
-from tf_smpl.batch_smpl import SMPL
-
-
-class SMPLThread(MLThread):
-    """
-    Creates a thread that will load the SMPL model.
-
-    Attributes
-    ----------
-    smpl_model_path: str
-        The path where the SMPL model is saved.
-    joint_type: {'cocoplus', 'lsp'}
-        The type of joints to be used. Cocoplus has 19 joints and lsp has 14 joints.
-        In this custom implementation the SMPL model always returns the 24 smpl joints.
-    output_fn: function
-        The function to call on the outputs for each prediction.
-    frame_index: int
-        The current frame of the exercise playback.
-    graph: tensorflow.Graph
-        The computational graph to be used.
-    sess: tensorflow.Session
-        The session to be used.
-    smpl: tf_smpl.batch_smpl.SMPL
-        The SMPL model implementation in tensorflow.
-    thetas: tensorflow.Tensor
-        The input tensor that holds the pose and shape coefficients for the SMPL model.
-    verts: tensorflow.Tensor
-        The output tensor that holds the vertices of the smpl mesh.
-    joints: tensorflow.Tensor
-        The output tensor that holds the 24 keypoints of the smpl mesh.
-    """
-    def __init__(self, smpl_model_path, joint_type, output_fn, *args, **kwargs):
-        self.smpl_model_path = smpl_model_path
-        self.joint_type = joint_type
-        self.output_fn = output_fn
-        self.frame_index = 0
-        super().__init__('SMPL', *args, **kwargs)
-
-    def prepare_model(self):
-        """ Create the tensorflow graph and session and build the SMPL model. """
-        self.graph = tf.Graph()
-        config = tf.compat.v1.ConfigProto()
-        config.gpu_options.allow_growth = True
-        self.sess = tf.compat.v1.Session(graph=self.graph, config=config)
-        with self.graph.as_default():
-            self.build_model()
-
-    def build_model(self):
-        """ Load the SMPL model, create the input and output tensors and initialise the session. """
-        self.smpl = SMPL(self.smpl_model_path, self.joint_type)
-        # Thetas are 10 shape coefficients of SMPL
-        # and 72 pose variables holding the rotation of 24 joints in axis angle format
-        self.thetas = tf.compat.v1.placeholder(tf.float32, shape=(1, 82))
-
-        pose, shape = self.thetas[:, :72], self.thetas[:, 72:]
-        self.verts, _, self.joints = self.smpl(shape, pose, get_skin=True)
-
-        init = tf.compat.v1.global_variables_initializer()
-        self.sess.run(init)
-
-    def prepare_inputs(self):
-        """ Get the current frame's thetas and add the batch dimension. """
-        thetas = self.exercise[self.frame_index % len(self.exercise)]
-        thetas = np.expand_dims(thetas, axis=0)
-        return thetas
-
-    def predict(self, thetas):
-        """ Create the inputs and expected outputs and run the prediction. """
-        feed_dict = {self.thetas: thetas}
-        fetch_dict = {
-            'vertices': self.verts,
-            'keypoints': self.joints
-        }
-        outputs = self.sess.run(fetch_dict, feed_dict)
-        return outputs
-
-    def process_outputs(self, outputs):
-        """ Run the specified function with the outputs of the prediction and go to the next frame. """
-        self.output_fn(outputs['vertices'][0], outputs['keypoints'][0])
-        self.frame_index += 1
-
-    def cleaning_up(self):
-        pass
-
-    @property
-    def exercise(self):
-        """ array_like (N x 82): The 82 thetas for each of the N frames of the current exercise.
-
-        When setting a new exercise, reset the the index of the current frame as well.
-        """
-        return self._exercise
-
-    @exercise.setter
-    def exercise(self, ex):
-        self.frame_index = 0
-        self._exercise = ex
 
 
 class HMRThread(MLThread):
@@ -131,6 +36,7 @@ class HMRThread(MLThread):
     source: str
         The source stream to be used in the capture. Can be either 'cam' or a video file path.
     """
+
     def __init__(self, model_cfg, output_fn, save_fn, *args, **kwargs):
         # Setup the session and load the hmr model
         self.model_cfg = model_cfg
@@ -170,7 +76,11 @@ class HMRThread(MLThread):
             The frame image is an array_like.
         """
         ret, frame = self.capture.read()
-        frame, _ = process_image(frame, self.img_size)
+
+        if ret:
+            cv2.imshow('frame', frame)
+            cv2.waitKey(1)
+            frame, _ = process_image(frame, self.img_size)
         inputs = {'ret': ret, 'frame': frame}
         return inputs
 
@@ -195,9 +105,6 @@ class HMRThread(MLThread):
             if self._saving.is_set():
                 self.thetas.append(theta[0, 3:])
 
-            # Display input image
-            cv2.imshow('frame', inputs['frame'])
-            cv2.waitKey(1)
             outputs = {'verts': verts[0], 'joints3d': joints3d[0]}
             return outputs
         else:
@@ -228,6 +135,7 @@ class HMRThread(MLThread):
         cv2.destroyAllWindows()
 
     def save(self):
+        self.thetas = []
         self._saving.set()
 
     @property
@@ -252,5 +160,4 @@ class HMRThread(MLThread):
             if os.path.exists(self.source):
                 self._capture = cv2.VideoCapture(self.source)
             else:
-                raise FileNotFoundError(errno.ENOENT,
-                                        os.strerror(errno.ENOENT), self.source)
+                raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), self.source)

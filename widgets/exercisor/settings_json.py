@@ -1,0 +1,47 @@
+import json
+
+default_json = {
+    "Exercisor": {
+        "exercise_paths": "./widgets/exercisor/exercise_data/",
+        "pretrained_models_path": "./widgets/exercisor/pretrained_models_data"
+    },
+    "ExercisorEditor": {
+        "video_input_path": "/home/ziposc/Videos",
+    }
+}
+
+settings_json = json.dumps([
+    {
+        "type": "title",
+        "title": "Exercisor"
+    },
+    {
+        "type": "path",
+        "title": "Saved Exercises Path",
+        "desc": "The folder where the exercises' data will be saved",
+        "section": "Exercisor",
+        "key": "exercises_path"
+    },
+    {
+        "type": "path",
+        "title": "Pretrained Models Path",
+        "desc": "The folder of the pretrained models",
+        "section": "Exercisor",
+        "key": "pretrained_models_path"
+    },
+    {
+        "type": "title",
+        "title": "Play"
+    },
+    {
+        "type": "title",
+        "title": "Editor"
+    },
+    {
+        "type": "path",
+        "title": "Video Exercises Path",
+        "desc": "The default folder of the video exercises",
+        "section": "ExercisorEditor",
+        "key": "video_input_path"
+    },
+])

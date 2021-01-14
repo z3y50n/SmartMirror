@@ -8,7 +8,7 @@ from kivy.graphics.opengl import glEnable, glDisable, GL_DEPTH_TEST
 from kivy.graphics import RenderContext, Callback, PushMatrix, PopMatrix, \
     Color, Translate, Rotate, Mesh, UpdateNormalMatrix, Scale
 
-from objloader import ObjFile
+from play.objloader import ObjFile
 
 
 class MeshData(object):
@@ -100,10 +100,9 @@ class Renderer(Widget):
     curr_mode = StringProperty('')
     nframes = NumericProperty(-1)
 
-    def __init__(self, smpl_faces_path=None, frame_label=None, mode_label=None, **kwargs):
+    def __init__(self, smpl_faces_path=None, frame_label=None, mesh_path=None, **kwargs):
 
         self.frame_label = frame_label
-        self.mode_label = mode_label
         self.smpl_faces = np.load(smpl_faces_path)
 
         # Make a canvas and add simple view
@@ -111,7 +110,7 @@ class Renderer(Widget):
         self.canvas.shader.source = resource_find('simple.glsl')
         super(Renderer, self).__init__(**kwargs)
 
-        self.scene = ObjFile(resource_find("monkey.obj"))
+        self.scene = ObjFile(mesh_path)
 
         self.create_mesh_fn = {
             'monkey': self.create_monkey_mesh,
@@ -133,16 +132,10 @@ class Renderer(Widget):
         self.nframes = 0
         self.reset_scene()
 
-    def on_curr_mode(self, *args):
-        self.mode_label.text = f'Current mesh mode: {self.curr_mode}'
-
-    def on_nframes(self, *args):
-        self.frame_label.text = f'Frame count: {self.nframes}'
-
     def setup_scene(self, object):
         self.curr_obj = object
         with self.canvas:
-            self.cb = Callback(self.setup_gl_context)
+            self.cb = Callback(self._setup_gl_context)
             PushMatrix()
             Color(0, 0, 0, 1)
             PushMatrix()
@@ -155,30 +148,30 @@ class Renderer(Widget):
                 self.create_mesh_fn[object]()
             PopMatrix()
             PopMatrix()
-            self.cb = Callback(self.reset_gl_context)
+            self.cb = Callback(self._reset_gl_context)
 
         asp = self.width / float(self.height)
-        proj = Matrix().view_clip(-asp, asp, -1, 1, 0.8, 100, 1)
+        proj = Matrix().view_clip(-asp, asp, -1, 1, 1.5, 100, 1)
         self.canvas['projection_mat'] = proj
         self.canvas['diffuse_light'] = (1.0, 1.0, 0.8)
         self.canvas['ambient_light'] = (0.1, 0.1, 0.1)
 
-    def setup_gl_context(self, *args):
+    def _setup_gl_context(self, *args):
         glEnable(GL_DEPTH_TEST)
 
-    def reset_gl_context(self, *args):
+    def _reset_gl_context(self, *args):
         glDisable(GL_DEPTH_TEST)
 
     def reset_scene(self):
         self.canvas.clear()
-        self.reset_timers(('scale', 'rotate', 'deform'))
+        self._reset_timers(('scale', 'rotate', 'deform'))
 
         if hasattr(self, 'mesh'):
             del(self.mesh)
 
         self.nframes = 0
 
-    def reset_timers(self, timer_spec):
+    def _reset_timers(self, timer_spec):
         for timer in timer_spec:
             if timer in self.timers.keys():
                 self.timers[timer].cancel()
@@ -262,7 +255,7 @@ class Renderer(Widget):
             raise UnboundLocalError('The mesh does not exist')
 
         if anim in self.animations.keys():
-            self.reset_timers((anim,))
+            self._reset_timers((anim,))
             if play:
                 self.timers[anim] = Clock.schedule_interval(self.animations[anim], 1/60.)
 
@@ -270,11 +263,9 @@ class Renderer(Widget):
         step = ((self.nframes) % 360) * np.pi / 180.
         scale_factors = (np.sin(step) * 0.7 + 0.9, -np.sin(step) * 0.7 + 0.9, 1)
         self.scale.xyz = scale_factors
-        self.nframes += 1
 
     def rotate_anim(self, delta):
         self.roty.angle += delta * 50
-        self.nframes += 1
 
     def deform_anim(self, delta):
         vertices = self.mesh_data.vertices + np.random.normal(size=self.mesh_data.vertices.shape) * 0.02
@@ -292,10 +283,6 @@ class Renderer(Widget):
         self.mesh.vertices = self.mesh_data.gl_verts
         self.nframes += 1
 
-    def set_keypoints(self, new_kpnts):
-        self.mesh.points = new_kpnts.flatten().tolist()
-        self.nframes += 1
-
     def change_mesh_mode(self):
         cur_indx = self.MESH_MODES.index(self.curr_mode)
         self.curr_mode = self.MESH_MODES[(cur_indx + 1) % len(self.MESH_MODES)]
@@ -304,7 +291,7 @@ class Renderer(Widget):
 
     def on_touch_down(self, touch):
         if self.collide_point(*touch.pos):
-            # The touch has occurred inside the widgets area. Do stuff!
+            # The touch has occurred inside the widgets area.
             touch.grab(self)
             return True
 

@@ -2,6 +2,7 @@
 *config.py
 *smartmirror.ini
 
-**/models/
+**/pretrained_models_data/
+**/exercise_data/
 .vscode/
 docs/

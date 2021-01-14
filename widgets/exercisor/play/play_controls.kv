@@ -1,0 +1,35 @@
+#:kivy 2.0.0
+
+<PlayControls>:
+    rows: 2
+    play_spin: play_spin
+
+    Spinner:
+        id: spin_1
+        text: 'Render'
+        values: 'monkey', 'monkey_no_norms', 'random', 'smpl_mesh', 'smpl_kpnts'
+        on_text: root.render(self.text)
+    Spinner:
+        id: play_spin
+        text: 'Choose an exercise'
+        values: ''
+        on_text: root.playtest(self.text)
+    Widget:
+    CustomToggle:
+        id: tog_1
+        text: 'Scale'
+        on_state: root.anim_mesh(self.state, 'scale')
+    CustomToggle:
+        id: tog_2
+        text: 'Rotate'
+        on_state: root.anim_mesh(self.state, 'rotate')
+    CustomToggle:
+        id: tog_3
+        text: 'Deform'
+        on_state: root.anim_mesh(self.state, 'deform')
+    CustomButton:
+        text: 'Change mesh mode'
+        on_release: root.change_mesh_mode()
+    CustomButton:
+        text: 'Reset'
+        on_release: root.reset_ui()

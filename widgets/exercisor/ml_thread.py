@@ -7,6 +7,7 @@ from log import logger
 class MLThread(ABC, threading.Thread):
     """
     The abstract implementation of a machine learning module that will be run on a separate thread.
+    The thread executes instantly when it is constructed and enters the paused state.
 
     Attributes
     ----------
@@ -26,7 +27,7 @@ class MLThread(ABC, threading.Thread):
     stop()
         Stops the execution of the thread.
     is_paused()
-        Returns a bool if the thread is paused.
+        Returns True if the thread is paused, False otherwise.
     run()
         The execution method of the thread.
     prepare_model()
@@ -42,7 +43,6 @@ class MLThread(ABC, threading.Thread):
     """
 
     def __init__(self, model_name=None, target_fps=25, *args, **kwargs):
-        """ The thread executes instantly when it is constructed and enters the paused state. """
         super(MLThread, self).__init__(*args, **kwargs)
 
         self.model_name = model_name
