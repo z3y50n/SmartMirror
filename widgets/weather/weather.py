@@ -38,19 +38,22 @@ class Weather(Widget):
 
     def update_config(self):
         self._config.read(CONFIG_PATH)
+        self._get_weather(0)
 
     def _get_weather(self, dt):
         try:
             r = requests.get(
                 f"https://api.openweathermap.org/data/2.5/weather?id={self._city_id}&appid={self._api_key}&units=metric")
             r = json.loads(r.text)
+            self.ids['temp_label'].opacity = 1
+            self.ids['temp_icon'].opacity = 1
             self._temperature = str(round(r['main']['temp']))
             self._icon = f"http://openweathermap.org/img/w/{r['weather'][0]['icon']}.png"
             self._description = f"{r['name']}: {r['weather'][0]['description']}"
         except:
-            self.ids['temp_label'].text = ""
+            self.ids['temp_label'].opacity = 0
             self.ids['temp_icon'].opacity = 0
-            self.ids["temp_desc"].text = "Could not fetch weather data"
+            self._description = "Could not fetch weather data"
 
 
 if __name__ == "__main__":

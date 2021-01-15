@@ -5,6 +5,7 @@ import threading
 from kivy.app import App
 from kivy.clock import mainthread
 from kivy.core.window import Window
+from kivy.core.text import LabelBase
 from kivy.lang import Builder
 from kivy.properties import StringProperty
 from kivy.uix.floatlayout import FloatLayout
@@ -12,7 +13,7 @@ from kivy.uix.screenmanager import Screen, ScreenManager
 from kivy.uix.settings import SettingsWithSidebar
 
 from main_controller import MainController
-from settingsjson import settings_json, default_json, WELCOME_MESSAGES
+from settingsjson import settings_json, default_json, WELCOME_MESSAGES, KIVY_FONTS
 from widgets.clock.clock import MirrorClock
 from widgets.weather.weather import Weather
 
@@ -21,12 +22,17 @@ WIDGET_PATH = os.path.join(os.path.dirname(
     os.path.abspath(__file__)), 'widgets/')
 
 
+for font in KIVY_FONTS:
+    LabelBase.register(**font)
+
+
 class MainPage(ScreenManager):
     _welcome = StringProperty("")
 
     def __init__(self, **kwargs):
         super(MainPage, self).__init__(**kwargs)
-        self._welcome = WELCOME_MESSAGES[random.randint(0,len(WELCOME_MESSAGES)-1)]
+        self._welcome = WELCOME_MESSAGES[random.randint(0, len(WELCOME_MESSAGES)-1)]
+
 
 class SmartMirrorApp(App):
     def __init__(self, **kwargs):

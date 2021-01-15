@@ -1,7 +1,11 @@
 import json
 
-WELCOME_MESSAGES = ["Welcome you look beautiful today!",
-                    "I am so happy to see you back!"]
+WELCOME_MESSAGES = ["Welcome you look beautiful today!"]
+
+KIVY_FONTS = [{
+    "name": "Roboto-Mono",
+    "fn_regular": "./assets/fonts/RobotoMono-Regular.ttf"
+}]
 
 default_json = {
     "Speech": {

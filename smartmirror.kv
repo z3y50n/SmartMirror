@@ -8,10 +8,10 @@
                 id: welcome_msg
                 text: root._welcome
                 font_size: self.parent.width * 0.02
-                size_hint: None, None
+                size_hint: 0.4, None
                 size: self.texture_size
                 pos_hint: {'center_x': 0.5, 'top': 0.98}
-                # font_name: "Roboto-Regular"
+                # font_name: "Roboto-Mono"
             
             Label:
                 id: status_label
@@ -30,6 +30,6 @@
                 id: mirror_clock
                 size_hint: 0.3, 0.3
                 pos_hint: {"x": 0.7, "top": 1}
-    
+
 <Label>:
-    font_family: "Roboto"
+    font_name: "Roboto-Mono"
