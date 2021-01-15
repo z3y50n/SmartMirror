@@ -1,5 +1,8 @@
 import json
 
+WELCOME_MESSAGES = ["Welcome you look beautiful today!",
+                    "I am so happy to see you back!"]
+
 default_json = {
     "Speech": {
         "launch_phrase": "mirror mirror on the wall",

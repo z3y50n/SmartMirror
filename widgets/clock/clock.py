@@ -4,6 +4,7 @@ from kivy.base import runTouchApp
 from kivy.clock import Clock
 from kivy.lang import Builder
 from kivy.properties import StringProperty
+from kivy.uix.screenmanager import Screen
 from kivy.uix.widget import Widget
 
 
