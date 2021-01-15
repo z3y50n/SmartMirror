@@ -1,6 +1,5 @@
 import os
 import random
-import threading
 
 from kivy.app import App
 from kivy.clock import mainthread
@@ -13,7 +12,7 @@ from kivy.uix.screenmanager import Screen, ScreenManager
 from kivy.uix.settings import SettingsWithSidebar
 
 from main_controller import MainController
-from settingsjson import settings_json, default_json, WELCOME_MESSAGES, KIVY_FONTS
+from mirror_settings import settings_json, default_json, WELCOME_MESSAGES, KIVY_FONTS
 from widgets.clock.clock import MirrorClock
 from widgets.weather.weather import Weather
 

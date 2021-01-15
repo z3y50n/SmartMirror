@@ -1,5 +1,3 @@
-import os
-
 from configparser import ConfigParser
 import os
 import threading
