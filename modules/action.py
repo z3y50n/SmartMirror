@@ -1,29 +1,27 @@
 class Action:
     def __init__(self, gui) -> None:
         self._gui = gui
-        self._commands = {"main": self._extract_functions()}
+        self._commands = self._extract_functions([self._gui])
 
-        print(dir(self._gui))
-        screen = self._screen_widgets()
-        self._commands.update(self._extract_functions(screen))
+    def get_screen(self, name):
+        for screen in self._gui.root.screens:
+            if screen.name == name:
+                return screen
+        return None
 
-    def _get_screen(self):
-        return self._gui.root.current
-
-    def _extract_functions(self, screen=[]):
+    def _extract_functions(self, widgets: list = []):
         """Extract functions of main app and given screen"""
-        if screen:
-            functions = {widget.name: [method_name for method_name in dir(widget)
-                                       if not method_name.startswith("_") and callable(getattr(widget, method_name))]
-                         for widget in screen if hasattr(widget, "name")}
-        else:
-            functions = [method_name for method_name in dir(self._gui)
-                         if not method_name.startswith("_") and callable(getattr(self._gui, method_name))]
+        functions = {widget.name: [method_name for method_name in dir(widget)
+                                   if not method_name.startswith("_") and callable(getattr(widget, method_name))]
+                     for widget in widgets if hasattr(widget, "name")}
         return functions
 
-    def _screen_widgets(self):
-        widgets = [widget for widget in self._gui.root.walk()]
-        return widgets
+    def _extract_widgets(self, screen):
+        """Extract widgets of the current screen"""
+        if not hasattr(screen, "walk"):
+            return
+        widgets = [widget for widget in screen.walk()]
+        return widgets[1:]
 
     def perform(self, intents, entities):
         pass
