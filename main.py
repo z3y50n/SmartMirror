@@ -11,7 +11,8 @@ from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.screenmanager import Screen, ScreenManager
 from kivy.uix.settings import SettingsWithSidebar
 
-from main_controller import MainController
+from modules.bot import Bot
+from modules.controller import Controller
 from mirror_settings import settings_json, default_json, WELCOME_MESSAGES, KIVY_FONTS
 from widgets.clock.clock import MirrorClock
 from widgets.weather.weather import Weather
@@ -30,7 +31,7 @@ class MainPage(ScreenManager):
 
     def __init__(self, **kwargs):
         super(MainPage, self).__init__(**kwargs)
-        self._welcome = WELCOME_MESSAGES[random.randint(0, len(WELCOME_MESSAGES)-1)]
+        self._welcome = random.choice(WELCOME_MESSAGES)
 
 
 class SmartMirrorApp(App):
@@ -38,7 +39,7 @@ class SmartMirrorApp(App):
         super().__init__(**kwargs)
 
     def on_start(self):
-        controller = MainController(self)
+        controller = Controller(self)
 
     def build(self, **kwargs):
         for kv in os.listdir(WIDGET_PATH):
@@ -47,9 +48,8 @@ class SmartMirrorApp(App):
         return MainPage()
 
     @mainthread
-    def show_settings(self, command):
-        if command == "open settings":
-            self.open_settings()
+    def show_settings(self):
+        self.open_settings()
 
     def on_config_change(self, config, section, key, value):
         for widget in self.root.ids.values():
@@ -57,6 +57,7 @@ class SmartMirrorApp(App):
                 widget.update_config()
 
     def build_config(self, config):
+        config.setdefaults("Wit", default_json["Wit"])
         config.setdefaults("Speech", default_json["Speech"])
         config.setdefaults("WeatherAPI", default_json["WeatherAPI"])
 

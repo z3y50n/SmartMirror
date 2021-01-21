@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime
 
 from kivy.base import runTouchApp
 from kivy.clock import Clock
@@ -7,6 +7,8 @@ from kivy.properties import StringProperty
 from kivy.uix.screenmanager import Screen
 from kivy.uix.widget import Widget
 
+DATE_FORMAT = "%Y-%m-%d"
+
 
 class MirrorClock(Widget):
     _hour = StringProperty("")
@@ -14,13 +16,20 @@ class MirrorClock(Widget):
 
     def __init__(self, **kwargs):
         super(MirrorClock, self).__init__(**kwargs)
-        self.update_time(0)
-        Clock.schedule_interval(self.update_time, 1)
+        self._update_time(0)
+        Clock.schedule_interval(self._update_time, 1)
 
-    def update_time(self, dt):
-        time = datetime.datetime.now()
+    def _update_time(self, dt):
+        time = datetime.now()
         self._hour = f"{time.strftime('%H')}:{time.strftime('%M')}"
         self._date = f"{time.strftime('%A')} {time.strftime('%b')} {time.strftime('%d')} {time.strftime('%Y')}"
+
+    def diff_of_dates(self, s_date: str):
+        today = datetime.now().date()
+        s_date = datetime.strptime(s_date, DATE_FORMAT).date()
+        diff = s_date - today
+        print(f"Difference: {diff} Days")
+        return diff.days
 
 
 if __name__ == "__main__":

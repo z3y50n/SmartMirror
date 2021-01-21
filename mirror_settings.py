@@ -1,6 +1,8 @@
 import json
 
-WELCOME_MESSAGES = ["Welcome you look beautiful today!"]
+WELCOME_MESSAGES = ["Welcome you look beautiful today!",
+                    "How are you today?",
+                    "I am glad to see you back!"]
 
 KIVY_FONTS = [{
     "name": "Roboto-Mono",
@@ -8,6 +10,9 @@ KIVY_FONTS = [{
 }]
 
 default_json = {
+    "Wit": {
+        "api_key": "API_KEY"
+    },
     "Speech": {
         "launch_phrase": "mirror mirror on the wall",
         "close_phrase": "thank you mirror"
@@ -15,11 +20,23 @@ default_json = {
     "WeatherAPI": {
         "api_key": "API_KEY",
         "city_id": "CITY_ID",
+        "city_name": "",
         "update_interval": 1800
     }
 }
 
 settings_json = json.dumps([
+    {
+        "type": "title",
+        "title": "Wit.ai"
+    },
+    {
+        "type": "string",
+        "title": "API KEY",
+        "desc": "The wit.ai API key",
+        "section": "Wit",
+        "key": "api_key"
+    },
     {
         "type": "title",
         "title": "Speech"
@@ -55,6 +72,13 @@ settings_json = json.dumps([
         "desc": "Openweathermap City's id",
         "section": "WeatherAPI",
         "key": "city_id"
+    },
+    {
+        "type": "string",
+        "title": "City Name",
+        "desc": "Openweathermap City's name",
+        "section": "WeatherAPI",
+        "key": "city_name"
     },
     {
         "type": "numeric",

@@ -22,6 +22,7 @@
 
             Weather:
                 id: weather
+                name: "weather"
                 size_hint: 0.3, 0.3
                 pos_hint: {"x": 0, "top":1}
 
@@ -30,6 +31,13 @@
                 id: mirror_clock
                 size_hint: 0.3, 0.3
                 pos_hint: {"x": 0.7, "top": 1}
+    Screen:
+        name: "screen 2"
+        Widget:
+            id: test_widget
+        Label:
+            id: test_label
+
 
 <Label>:
     font_name: "Roboto-Mono"

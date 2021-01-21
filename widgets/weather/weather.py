@@ -1,4 +1,3 @@
-# from configparser import ConfigParser
 from kivy.config import ConfigParser
 import json
 import os
@@ -14,6 +13,8 @@ from kivy.uix.widget import Widget
 CONFIG_PATH = os.path.join(os.path.abspath(os.path.join(
     __file__, os.path.pardir, os.path.pardir, os.path.pardir)), "smartmirror.ini")
 
+WEATHER_URL = "https://api.openweathermap.org/data/2.5/"
+
 
 class Weather(Widget):
     _temperature = StringProperty("")
@@ -21,6 +22,7 @@ class Weather(Widget):
     _description = StringProperty("")
     _api_key = ConfigParserProperty("", "WeatherAPI", "api_key", "Weather")
     _city_id = ConfigParserProperty("", "WeatherAPI", "city_id", "Weather")
+    _city_name = ConfigParserProperty("", "WeatherAPI", "city_name", "Weather")
     _update_interval = ConfigParserProperty(
         "", "WeatherAPI", "update_interval", "Weather")
     _config = ConfigParser(name="Weather")
@@ -42,9 +44,12 @@ class Weather(Widget):
 
     def _get_weather(self, dt):
         try:
-            r = requests.get(
-                f"https://api.openweathermap.org/data/2.5/weather?id={self._city_id}&appid={self._api_key}&units=metric")
+            if self._city_name:
+                r = requests.get(f"{WEATHER_URL}weather?q={self._city_name}&appid={self._api_key}&units=metric")
+            else:
+                r = requests.get(f"{WEATHER_URL}weather?id={self._city_id}&appid={self._api_key}&units=metric")
             r = json.loads(r.text)
+
             self.ids['temp_label'].opacity = 1
             self.ids['temp_icon'].opacity = 1
             self._temperature = str(round(r['main']['temp']))
@@ -54,6 +59,13 @@ class Weather(Widget):
             self.ids['temp_label'].opacity = 0
             self.ids['temp_icon'].opacity = 0
             self._description = "Could not fetch weather data"
+
+    #TODO: Translate city name to lat&lon
+    def request_weather(self, day):
+        r = requests.get(f"{WEATHER_URL}onecall?lat=40.623341&lon=22.95369&units=metric&exclude=current,minutely,hourly&appid={self._api_key}")
+        r = json.loads(r.text)
+        print(json.dumps(r['daily'][day], indent=4))
+        # print(json.dumps(r, indent=4))
 
 
 if __name__ == "__main__":
