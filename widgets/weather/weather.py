@@ -45,9 +45,11 @@ class Weather(Widget):
     def _get_weather(self, dt):
         try:
             if self._city_name:
-                r = requests.get(f"{WEATHER_URL}weather?q={self._city_name}&appid={self._api_key}&units=metric")
+                r = requests.get(
+                    f"{WEATHER_URL}weather?q={self._city_name}&appid={self._api_key}&units=metric")
             else:
-                r = requests.get(f"{WEATHER_URL}weather?id={self._city_id}&appid={self._api_key}&units=metric")
+                r = requests.get(
+                    f"{WEATHER_URL}weather?id={self._city_id}&appid={self._api_key}&units=metric")
             r = json.loads(r.text)
 
             self.ids['temp_label'].opacity = 1
@@ -60,9 +62,10 @@ class Weather(Widget):
             self.ids['temp_icon'].opacity = 0
             self._description = "Could not fetch weather data"
 
-    #TODO: Translate city name to lat&lon
+    # TODO: Translate city name to lat&lon
     def request_weather(self, day):
-        r = requests.get(f"{WEATHER_URL}onecall?lat=40.623341&lon=22.95369&units=metric&exclude=current,minutely,hourly&appid={self._api_key}")
+        r = requests.get(
+            f"{WEATHER_URL}onecall?lat=40.623341&lon=22.95369&units=metric&exclude=current,minutely,hourly&appid={self._api_key}")
         r = json.loads(r.text)
         print(json.dumps(r['daily'][day], indent=4))
         # print(json.dumps(r, indent=4))

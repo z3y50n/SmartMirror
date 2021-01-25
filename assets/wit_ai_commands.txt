@@ -1,0 +1,26 @@
+WIT.AI commands
+---------------
+
+				Command							:		Params
+
+	go to { player, editor }					: { 'normal', 'down' }						->  exercisor.change_control(param)
+
+
+	Editor	
+	------
+	search playback { rewind, fast_forward }	: { duration: seconds }						-> exercisor.actions['playback'].seek(param, fmt='duration')
+
+	switch human form, mesh						: { 'mesh', 'kpnts' }						-> editor_controls.set_smpl_mode(param, True)
+
+	play/pause (playback)						: { 'down' , 'normal' }						-> editor_controls.on_play_pause(param)
+
+	play(back) 'exercise' 						: { options from editor_control.exercises }	-> editor_controls.start_playback(param)
+
+	Exercise Loading
+	----------------
+
+	load/save a new exercise					: {} 										-> editor_controls.show_load_dialog()
+
+	commands to traverse the load dialog tree
+	
+	(load) 'exercise'							: { filename }								-> editor_controls.predict_from_video(path, param) # the path is obtained from the load dialog

@@ -26,12 +26,21 @@ class Bot():
             resp = self._client.message(text)
             if resp['intents'] and resp['intents'][0]['confidence'] > 0.7:
                 print(json.dumps(resp, indent=4))
-                return resp
+                return self.format_response(resp)
+                
             print("Wit could not understand you")
             return
         except:
             print("Bad request")
             return
+    
+    def format_response(self, resp):
+        intent = resp['intents'][0]['name'].split("_", 1)
+        widget_name = intent[0]
+        function_name = intent[1]
+        args = {entity[0]['name']: entity[0]['value'] for entity in resp['entities'].values()}
+
+        return {"widget": widget_name, "function": function_name, "args": args}
 
 
 if __name__ == "__main__":
