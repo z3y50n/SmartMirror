@@ -47,10 +47,17 @@ class SmartMirrorApp(App):
         self.settings_cls = SettingsWithSidebar
         return MainPage()
 
+    def subscribe(self):
+        return {
+            "main": "hello",
+            "test": "world"
+        }
+
     @mainthread
     def show_settings(self):
         self.open_settings()
 
+    @mainthread
     def on_config_change(self, config, section, key, value):
         for widget in self.root.ids.values():
             if hasattr(widget, "update_config"):

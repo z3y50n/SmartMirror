@@ -46,13 +46,14 @@ class Controller(threading.Thread):
         while not self._s.check_close_phrase():
             self._running.wait()
             self._s.speak(self._gui.root.ids['status_label'])
-
+            
             if self._s.get_text() == "quit" or self._s.get_text() == "exit":
                 self._gui.stop()
             
             resp = self._bot.message(self._s.get_text())
             if not resp:
                 continue
+            print(resp)
             
             self._action.perform(resp)
             

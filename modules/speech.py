@@ -20,13 +20,16 @@ class Speech():
     def get_text(self):
         return self._text
 
-    def _listen_for_audio(self):
+    def _listen_for_audio(self, label=None):
         m = sr.Microphone()
         with m as source:
             self._r.adjust_for_ambient_noise(source, duration=1)
+            if label:
+                label.text = "Listening..."
             print("Listening...")
-            
             self._audio = self._r.listen(source, phrase_time_limit=5)
+            if label:
+                label.text = ""
 
     def _speech_to_text(self):
         try:
@@ -46,11 +49,7 @@ class Speech():
         return False
 
     def speak(self, label=None):
-        if label:
-            label.text = "Listening..."
-        self._listen_for_audio()
-        if label:
-            label.text = ""
+        self._listen_for_audio(label)
         self._speech_to_text()
         print(self._text)
 

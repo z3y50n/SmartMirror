@@ -24,13 +24,6 @@ class MirrorClock(Widget):
         self._hour = f"{time.strftime('%H')}:{time.strftime('%M')}"
         self._date = f"{time.strftime('%A')} {time.strftime('%b')} {time.strftime('%d')} {time.strftime('%Y')}"
 
-    def diff_of_dates(self, s_date: str):
-        today = datetime.now().date()
-        s_date = datetime.strptime(s_date, DATE_FORMAT).date()
-        diff = s_date - today
-        print(f"Difference: {diff} Days")
-        return diff.days
-
 
 if __name__ == "__main__":
     Builder.load_file("clock.kv")
