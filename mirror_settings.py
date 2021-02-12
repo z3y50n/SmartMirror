@@ -16,12 +16,6 @@ default_json = {
     "Speech": {
         "launch_phrase": "mirror mirror on the wall",
         "close_phrase": "thank you mirror"
-    },
-    "WeatherAPI": {
-        "api_key": "API_KEY",
-        "city_id": "CITY_ID",
-        "city_name": "",
-        "update_interval": 1800
     }
 }
 
@@ -54,37 +48,5 @@ settings_json = json.dumps([
         "desc": "Phrase to stop interaction with mirror",
         "section": "Speech",
         "key": "close_phrase"
-    },
-    {
-        "type": "title",
-        "title": "Weather"
-    },
-    {
-        "type": "string",
-        "title": "API KEY",
-        "desc": "Openweathermap API key",
-        "section": "WeatherAPI",
-        "key": "api_key"
-    },
-    {
-        "type": "string",
-        "title": "City Id",
-        "desc": "Openweathermap City's id",
-        "section": "WeatherAPI",
-        "key": "city_id"
-    },
-    {
-        "type": "string",
-        "title": "City Name",
-        "desc": "Openweathermap City's name",
-        "section": "WeatherAPI",
-        "key": "city_name"
-    },
-    {
-        "type": "numeric",
-        "title": "Update Interval",
-        "desc": "How often to update the weather in seconds",
-        "section": "WeatherAPI",
-        "key": "update_interval"
     }
 ])

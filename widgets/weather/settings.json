@@ -1,0 +1,43 @@
+{
+    "default_json": {
+        "api_key": "API_KEY",
+        "city_id": "CITY_ID",
+        "city_name": "CITY_NAME",
+        "update_interval": 1800
+    
+    },
+    "settings_json": [
+        {
+            "type": "title",
+            "title": "Weather"
+        },
+        {
+            "type": "string",
+            "title": "API KEY",
+            "desc": "Openweathermap API key",
+            "section": "weather",
+            "key": "api_key"
+        },
+        {
+            "type": "string",
+            "title": "City Id",
+            "desc": "Openweathermap City's id",
+            "section": "weather",
+            "key": "city_id"
+        },
+        {
+            "type": "string",
+            "title": "City Name",
+            "desc": "Openweathermap City's name",
+            "section": "weather",
+            "key": "city_name"
+        },
+        {
+            "type": "numeric",
+            "title": "Update Interval",
+            "desc": "How often to update the weather in seconds",
+            "section": "weather",
+            "key": "update_interval"
+        }
+    ]
+}
