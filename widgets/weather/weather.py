@@ -22,11 +22,11 @@ class Weather(Widget):
     _temperature = StringProperty("")
     _icon = StringProperty("")
     _description = StringProperty("")
-    _api_key = ConfigParserProperty("", "WeatherAPI", "api_key", "Weather")
-    _city_id = ConfigParserProperty("", "WeatherAPI", "city_id", "Weather")
-    _city_name = ConfigParserProperty("", "WeatherAPI", "city_name", "Weather")
+    _api_key = ConfigParserProperty("", "weather", "api_key", "Weather")
+    _city_id = ConfigParserProperty("", "weather", "city_id", "Weather")
+    _city_name = ConfigParserProperty("", "weather", "city_name", "Weather")
     _update_interval = ConfigParserProperty(
-        "", "WeatherAPI", "update_interval", "Weather")
+        "", "weather", "update_interval", "Weather")
     _config = ConfigParser(name="Weather")
 
     def __init__(self, **kwargs):

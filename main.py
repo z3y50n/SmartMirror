@@ -1,5 +1,6 @@
 import os
 import random
+import json
 
 from kivy.app import App
 from kivy.clock import mainthread
@@ -66,13 +67,25 @@ class SmartMirrorApp(App):
     def build_config(self, config):
         config.setdefaults("Wit", default_json["Wit"])
         config.setdefaults("Speech", default_json["Speech"])
-        config.setdefaults("WeatherAPI", default_json["WeatherAPI"])
+
+        # Get default values from every widget
+        for widget in os.listdir(WIDGET_PATH):
+            if os.path.exists(os.path.join(WIDGET_PATH, widget, "settings.json")):
+                with open(os.path.join(WIDGET_PATH, widget, "settings.json")) as f:
+                    default = json.load(f)['default_json']
+                    config.setdefaults(widget, default)
 
     def build_settings(self, settings):
         settings.add_json_panel("Main Settings",
                                 self.config,
                                 data=settings_json)
 
+        # Create a panel for every widget that has settings.json file
+        for widget in os.listdir(WIDGET_PATH):
+                    if os.path.exists(os.path.join(WIDGET_PATH, widget, "settings.json")):
+                        with open(os.path.join(WIDGET_PATH, widget, "settings.json")) as f:
+                            temp_settings = json.dumps(json.load(f)['settings_json'])
+                            settings.add_json_panel(widget, self.config, data=temp_settings)
 
 if __name__ == "__main__":
     SmartMirrorApp().run()
