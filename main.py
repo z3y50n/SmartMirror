@@ -1,6 +1,7 @@
 import os
 import random
 import json
+import importlib
 
 from kivy.app import App
 from kivy.clock import mainthread
@@ -15,13 +16,15 @@ from kivy.uix.settings import SettingsWithSidebar
 from modules.bot import Bot
 from modules.controller import Controller
 from mirror_settings import settings_json, default_json, WELCOME_MESSAGES, KIVY_FONTS
-from widgets.clock.clock import MirrorClock
-from widgets.weather.weather import Weather
 
 
 WIDGET_PATH = os.path.join(os.path.dirname(
     os.path.abspath(__file__)), 'widgets/')
 
+# Import every module in widget folder
+for widget in os.listdir(WIDGET_PATH):
+    if os.path.exists(os.path.join(WIDGET_PATH, widget, "__init__.py")) and os.path.exists(os.path.join(WIDGET_PATH, widget, f"{widget}.py")):
+        importlib.import_module(f"widgets.{widget}.{widget}")
 
 for font in KIVY_FONTS:
     LabelBase.register(**font)
@@ -82,10 +85,12 @@ class SmartMirrorApp(App):
 
         # Create a panel for every widget that has settings.json file
         for widget in os.listdir(WIDGET_PATH):
-                    if os.path.exists(os.path.join(WIDGET_PATH, widget, "settings.json")):
-                        with open(os.path.join(WIDGET_PATH, widget, "settings.json")) as f:
-                            temp_settings = json.dumps(json.load(f)['settings_json'])
-                            settings.add_json_panel(widget, self.config, data=temp_settings)
+            if os.path.exists(os.path.join(WIDGET_PATH, widget, "settings.json")):
+                with open(os.path.join(WIDGET_PATH, widget, "settings.json")) as f:
+                    temp_settings = json.dumps(json.load(f)['settings_json'])
+                    settings.add_json_panel(
+                        widget, self.config, data=temp_settings)
+
 
 if __name__ == "__main__":
     SmartMirrorApp().run()
