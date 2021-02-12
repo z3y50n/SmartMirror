@@ -9,11 +9,9 @@ from kivy.core.window import Window
 from kivy.core.text import LabelBase
 from kivy.lang import Builder
 from kivy.properties import StringProperty
-from kivy.uix.floatlayout import FloatLayout
-from kivy.uix.screenmanager import Screen, ScreenManager
+from kivy.uix.screenmanager import ScreenManager
 from kivy.uix.settings import SettingsWithSidebar
 
-from modules.bot import Bot
 from modules.controller import Controller
 from mirror_settings import settings_json, default_json, WELCOME_MESSAGES, KIVY_FONTS
 
