@@ -55,39 +55,4 @@ class Action:
         self._gui.config.write()
         self._gui.on_config_change(self._gui.config, *conf[1:])
 
-    # def _extract_functions(self, widgets: list = []):
-    #     """Extract functions of main app and given screen"""
-    #     functions = {widget.name: [method_name for method_name in dir(widget)
-    #                                if not method_name.startswith("_") and callable(getattr(widget, method_name))]
-    #                  for widget in widgets if hasattr(widget, "name")}
-    #     return functions
-
-    # def _get_widget(self, screen, name):
-    #     """Get actual widget object from a given name"""
-    #     for widget in screen.walk():
-    #         if hasattr(widget, "name"):
-    #             if widget.name == name:
-    #                 return widget
-    #     return
-
-    # def perform(self, resp):
-    #     """Perform action as specified by wit bot"""
-    #     widget = self._gui
-    #     if resp['widget'] in self._commands and resp['function'] in self._commands[resp['widget']]:
-    #         widget = self._get_widget(self._current_screen, resp['widget'])
-    #     try:
-    #         # call function
-    #         resp = getattr(widget, resp['function'])(**resp['args'])
-    #         if "config" in resp:
-    #             self._config_change(resp)
-    #     except:
-    #         print("Something went wrong when calling the function")
     
-
-
-
-
-
-
-
-
