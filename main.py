@@ -9,7 +9,7 @@ from kivy.core.window import Window
 from kivy.core.text import LabelBase
 from kivy.lang import Builder
 from kivy.properties import StringProperty
-from kivy.uix.screenmanager import ScreenManager
+from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.uix.settings import SettingsWithSidebar
 
 from modules.controller import Controller
@@ -19,10 +19,12 @@ from mirror_settings import settings_json, default_json, WELCOME_MESSAGES, KIVY_
 WIDGET_PATH = os.path.join(os.path.dirname(
     os.path.abspath(__file__)), 'widgets/')
 
-# Import every module in widget folder
+WIDGETS = [] # Store all imported widgets
+
+# Import every module located in widget folder
 for widget in os.listdir(WIDGET_PATH):
     if os.path.exists(os.path.join(WIDGET_PATH, widget, "__init__.py")) and os.path.exists(os.path.join(WIDGET_PATH, widget, f"{widget}.py")):
-        importlib.import_module(f"widgets.{widget}.{widget}")
+        WIDGETS.append(importlib.import_module(f"widgets.{widget}.{widget}"))
 
 for font in KIVY_FONTS:
     LabelBase.register(**font)
@@ -34,6 +36,21 @@ class MainPage(ScreenManager):
     def __init__(self, **kwargs):
         super(MainPage, self).__init__(**kwargs)
         self._welcome = random.choice(WELCOME_MESSAGES)
+        self.installer()
+
+    def add_widget(self, screen):
+        """Overload add_widget function for extra security"""
+        if isinstance(screen, Screen):
+            super().add_widget(screen)
+
+    def installer(self):
+        """Call installers of every imported widget
+
+        Probably not very secure...
+        """
+        for widget in WIDGETS:
+            if hasattr(widget, "install"):
+                widget.install(self)
 
 
 class SmartMirrorApp(App):
