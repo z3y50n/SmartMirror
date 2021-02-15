@@ -44,15 +44,15 @@ class Action:
             if resp['intent'] in self._commands:
                 res = self._commands[resp['intent']](**resp['args'])
                 if "config" in res:
-                    self._config_change(res)
+                    self._config_change(res[1:])
             else:
                 print("Not available command")
         except:
             print("Something went wrong while trying to perform action")
 
     def _config_change(self, conf):
-        self._gui.config.set(*conf[1:])
+        self._gui.config.set(*conf)
         self._gui.config.write()
-        self._gui.on_config_change(self._gui.config, *conf[1:])
+        self._gui.on_config_change(self._gui.config, *conf)
 
     
