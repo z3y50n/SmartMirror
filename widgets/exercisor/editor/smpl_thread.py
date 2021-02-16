@@ -3,6 +3,7 @@ import tensorflow as tf
 
 from ml_thread import MLThread
 from tf_smpl.batch_smpl import SMPL
+from log import logger
 
 
 class SMPLThread(MLThread):
@@ -34,10 +35,9 @@ class SMPLThread(MLThread):
         The output tensor that holds the 24 keypoints of the smpl mesh.
     """
 
-    def __init__(self, smpl_model_path, joint_type, output_fn, *args, **kwargs):
+    def __init__(self, smpl_model_path, joint_type, *args, **kwargs):
         self.smpl_model_path = smpl_model_path
         self.joint_type = joint_type
-        self.output_fn = output_fn
         super().__init__('SMPL', *args, **kwargs)
 
     def prepare_model(self):
@@ -64,15 +64,17 @@ class SMPLThread(MLThread):
 
     def prepare_inputs(self):
         """ Get the current frame's thetas and add the batch dimension. """
-        if hasattr(self, 'exercise'):
-            thetas = self.exercise[self.frame_index]
-            thetas = np.expand_dims(thetas, axis=0)
-            return thetas
-        else:
-            raise UnboundLocalError('Playback exercise has not been set.')
+        if not hasattr(self, 'exercise'):
+            return
+        thetas = self.exercise[self.frame_index]
+        thetas = np.expand_dims(thetas, axis=0)
+        return thetas
 
     def predict(self, thetas):
         """ Create the inputs and expected outputs and run the prediction. """
+        if thetas is None:
+            return
+
         feed_dict = {self.thetas: thetas}
         fetch_dict = {
             'vertices': self.verts,
@@ -82,8 +84,11 @@ class SMPLThread(MLThread):
         return outputs
 
     def process_outputs(self, outputs):
+        if not outputs:
+            return
         """ Run the specified function with the outputs of the prediction and go to the next frame. """
-        self.output_fn(outputs['vertices'][0], outputs['keypoints'][0], self.frame_index)
+        frame = {'index': self.frame_index, 'timestamp': self.start_time}
+        self.output_fn(outputs['vertices'][0], outputs['keypoints'][0], frame)
         self.frame_index = (self.frame_index + 1) % len(self.exercise)
 
     def cleaning_up(self):
@@ -108,9 +113,12 @@ class SMPLThread(MLThread):
 
     @frame_index.setter
     def frame_index(self, new_frame_indx):
-        if new_frame_indx < 0:
-            self._frame_index = 0
-        elif new_frame_indx >= len(self.exercise):
-            self._frame_index = len(self.exercise) - 1
-        else:
-            self._frame_index = int(new_frame_indx)
+        try:
+            if new_frame_indx < 0:
+                self._frame_index = 0
+            elif new_frame_indx >= len(self.exercise):
+                self._frame_index = len(self.exercise) - 1
+            else:
+                self._frame_index = int(new_frame_indx)
+        except TypeError as err:
+            logger.debug(f'Exercise was not set. Error info: {err}')

@@ -6,6 +6,7 @@ from tensorflow.contrib.layers.python.layers.initializers import variance_scalin
 
 from tf_smpl import projection as proj_util
 from tf_smpl.batch_smpl import SMPL
+from log import logger
 
 
 def Encoder_resnet(x, is_training=True, weight_decay=0.001, reuse=False):
@@ -58,8 +59,8 @@ def Encoder_fc3_dropout(x,
           86: (f, tx, ty, tz) + 24*3 + 10, or 110 for factored axis-angle.
     - variables: tf variables
     """
-    if reuse:
-        print('Reuse is on!')
+    # if reuse:
+    #     print('Reuse is on!')
     with tf.compat.v1.variable_scope(name, reuse=reuse) as scope:
         net = slim.fully_connected(x, 1024, scope='fc1')
         net = slim.dropout(net, 0.5, is_training=is_training, scope='dropout1')
@@ -87,14 +88,14 @@ def get_encoder_fn_separate(model_type):
     if 'resnet' in model_type:
         encoder_fn = Encoder_resnet
     else:
-        print('Unknown encoder %s!' % model_type)
+        logger.error('Unknown encoder %s!' % model_type)
         exit(1)
 
     if 'fc3_dropout' in model_type:
         threed_fn = Encoder_fc3_dropout
 
     if encoder_fn is None or threed_fn is None:
-        print('Dont know what encoder to use for %s' % model_type)
+        logger.warning('Dont know what encoder to use for %s' % model_type)
         import ipdb
         ipdb.set_trace()
 
@@ -170,7 +171,7 @@ class HMR(object):
         self.final_thetas = []
         theta_prev = tf.tile(self.mean_var, [self.batch_size, 1])
         for i in np.arange(self.num_stage):
-            print('Iteration %d' % i)
+            # print('Iteration %d' % i)
             # ---- Compute outputs
             state = tf.concat([self.img_feat, theta_prev], 1)
 
@@ -209,7 +210,7 @@ class HMR(object):
             theta_prev = theta_here
 
     def prepare(self):
-        print('Restoring checkpoint %s..' % self.load_path)
+        logger.info('Restoring checkpoint %s...' % self.load_path)
         self.saver.restore(self.sess, self.load_path)
         self.mean_value = self.sess.run(self.mean_var)
 

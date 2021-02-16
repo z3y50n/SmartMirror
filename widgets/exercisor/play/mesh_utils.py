@@ -1,3 +1,114 @@
+import numpy as np
+
+
+class CustomMeshData(object):
+    """ Holds the data required to render a 3D mesh
+
+    Attributes
+    ----------
+    vertex_format: list of tuples
+        The format of the vertices' expected by the openGL buffer
+    vertices: array_like (N x 3)
+        The 3D coordinates of each of the N vertices of the mesh
+    faces: array_like (F x 3)
+        The 3 vertices' indices defining the F triangles
+    indices: list
+        The indices of the vertices that form triangles in a flat list, as specified by opengl
+    verts_formatted: array_like (N x 8)
+        The 3D coordinates, the normal vector and the 2D texture coordinates of the N vertices
+    gl_verts: list
+        The flatten openGL buffer that holds the vertices' data
+    """
+    __slots__ = ('vertex_format', 'vertices', 'faces', 'indices', 'verts_formatted', 'gl_verts')
+
+    def __init__(self, vertices=None, faces=None, **kwargs):
+        self.vertex_format = [
+            (b'v_pos', 3, 'float'),
+            (b'v_normal', 3, 'float'),
+            (b'v_tc0', 2, 'float')]
+
+        self.vertices = np.array(vertices)
+        self.faces = np.array(faces)
+
+        self.indices = []
+        self.gl_verts = []
+
+    def init_gl_verts(self):
+        """ Construct the :attr: verts_formatted and the :attr: gl_verts
+            using the :attr: vertices and the :attr: faces """
+        vert_norms, self.indices = self.extract_norms_and_indices(self.vertices, self.faces)
+        self.verts_formatted = np.array([
+                np.concatenate((vert, norm, [0, 0])) for vert, norm in zip(self.vertices, vert_norms)
+            ])
+        self.gl_verts = self.verts_formatted.flatten().tolist()
+
+    def extract_norms_and_indices(self, verts, faces):
+        """ Extract the vertex normals and indices
+
+        Parameters
+        ----------
+        verts : array_like (N x 3)
+            The 3D coordinates of the N vertices of the mesh
+        faces: array_like (F x 3)
+            The 3 vertices' indices defining the F triangles
+
+        Returns
+        -------
+        vert_norms: array_like (N x 3)
+            The normals calculated for each vertex
+        indices: list
+            The indices of the vertices that form triangles in a flat list, as specified by opengl
+        """
+
+        vert_norms = np.zeros(shape=(len(verts), 3))
+        indices = []
+        for tri in faces:
+            tri_verts = verts[tri]
+            face_norm = self.calc_face_norm(tri_verts)
+            for vid in tri:
+                vert_norms[vid] += face_norm
+                indices.append(vid)
+
+        return vert_norms, indices
+
+    def calc_face_norm(self, tri):
+        """ Calculate the surface normal for a triangle
+
+        Parameters
+        ----------
+        tri : array_like (3 x 3)
+            The 3D coordinates of the 3 vertices of the triangle
+
+        Returns
+        -------
+        n : array_like (3, )
+            The surface normal vector of the triangle
+        """
+
+        n = np.zeros(shape=(3))
+        u = tri[1] - tri[0]
+        v = tri[2] - tri[0]
+        n[0] = u[1] * v[2] - u[2] * v[1]
+        n[1] = u[2] * v[0] - u[0] * v[2]
+        n[2] = u[0] * v[1] - u[1] * v[0]
+        return n
+
+    def update_verts(self, new_verts):
+        """ Update the :attr: verts_formatted and the :attr: gl_verts
+
+        Parameters
+        ----------
+        new_verts: array_like (N x 3)
+            The 3D coordinates of the new vertices of the mesh
+        """
+        if not hasattr(self, 'verts_formatted'):
+            return
+
+        for i in range(self.verts_formatted.shape[0]):
+            self.verts_formatted[i][:3] = new_verts[i]
+        self.gl_verts = self.verts_formatted.flatten().tolist()
+
+
 class MeshData(object):
     def __init__(self, **kwargs):
         self.name = kwargs.get("name")

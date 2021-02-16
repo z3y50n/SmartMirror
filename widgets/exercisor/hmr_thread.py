@@ -31,19 +31,19 @@ class HMRThread(MLThread):
         The session to be used.
     model: models.HMR
         The HMR model implementation in tensorflow.
-    thetas: list of lists
+    thetas: list of lists (N x 82)
         The 82 thetas for each frame to be saved when saving an exercise.
     source: str
         The source stream to be used in the capture. Can be either 'cam' or a video file path.
     """
 
-    def __init__(self, model_cfg, output_fn, save_fn, *args, **kwargs):
+    def __init__(self, model_cfg, save_fn, *args, **kwargs):
         # Setup the session and load the hmr model
         self.model_cfg = model_cfg
         self.img_size = model_cfg.img_size
-        self.output_fn = output_fn
         self.save_fn = save_fn
 
+        self.source = ''
         self.capture = 'cam'
 
         self._saving = threading.Event()
@@ -71,8 +71,8 @@ class HMRThread(MLThread):
         Returns
         -------
         dict
-            The retrieval bool and the current frame image.
-            The retrieval bool is True if the frame retrieval was successful, False otherwise.
+            Contains the retrieval status and the current frame image.
+            The retrieval status is a boolean, which is True if the frame retrieval was successful, False otherwise.
             The frame image is an array_like.
         """
         ret, frame = self.capture.read()
@@ -97,7 +97,7 @@ class HMRThread(MLThread):
         -------
         dict
             The vertices and keypoints of the smpl mesh if the frame retrieval was successful.
-            Otherwise, if it was saving an exercise, returns the thetas for the whole exercise.
+            If it was saving an exercise, at the end of the exercise returns the thetas for the whole exercise.
         """
         if inputs['ret']:
             joints, verts, cams, joints3d, theta = self.model.predict(inputs['frame'], get_theta=True)
@@ -116,13 +116,15 @@ class HMRThread(MLThread):
                 return {'thetas': thetas}
 
     def process_outputs(self, outputs):
-        """ Call either the output_fn or the save_fn depending on the type of output """
+        """ Depending on the type of output, save the exercise data or send the outputs to the renderer """
+        if outputs is None:
+            return
         if 'thetas' in outputs.keys():
             filename = os.path.basename(self.source)
             filename = os.path.splitext(filename)[0]
             self.save_fn(filename, outputs['thetas'])
         elif 'verts' in outputs.keys() and 'joints3d' in outputs.keys():
-            self.output_fn(new_verts=outputs['verts'], new_kpnts=outputs['joints3d'])
+            self.output_fn(outputs['verts'], outputs['joints3d'], self.start_time)
 
     def cleaning_up(self):
         """ Release the acquired capture and close the opencv windows. """
@@ -131,8 +133,8 @@ class HMRThread(MLThread):
 
     def pause(self):
         """ Close all the opencv windows. """
-        super().pause()
         cv2.destroyAllWindows()
+        super().pause()
 
     def save(self):
         self.thetas = []
@@ -153,8 +155,11 @@ class HMRThread(MLThread):
 
     @capture.setter
     def capture(self, source):
+        if self.source == source:
+            return
+
         self.source = source
-        if source == 'cam':
+        if self.source == 'cam':
             self._capture = cv2.VideoCapture(0)
         else:
             if os.path.exists(self.source):

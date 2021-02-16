@@ -1,23 +1,23 @@
 import os
+from functools import partial
 import numpy as np
 
+from kivy.app import App
 from kivy.uix.widget import Widget
-from kivy.uix.popup import Popup
-from kivy.uix.floatlayout import FloatLayout
-from kivy.base import runTouchApp
+from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.screenmanager import Screen
 from kivy.lang import Builder
-from kivy.clock import mainthread
-from kivy.properties import ObjectProperty, ConfigParserProperty
+from kivy.properties import ConfigParserProperty
 from kivy.config import Config, ConfigParser
 
 import model_cfg
 from renderer import Renderer
-from log import logger
 from hmr_thread import HMRThread
 from editor.smpl_thread import SMPLThread
 from editor.editor_controls import EditorControls
 from play.play_controls import PlayControls
 from actions import PlaybackAction, PredictAction, PlayAction
+from wit_wrapper import WitWrapper
 
 # Config.set('modules', 'monitor', '')
 # Config.set('modules', 'showborder', '')
@@ -25,109 +25,129 @@ Config.set('graphics', 'width', '1080')
 Config.set('graphics', 'height', '920')
 
 
-class Exercisor(Widget):
+def install(manager):
+    manager.add_widget(ExercisorScreen())
+
+
+class ColorAdjustDialog(Widget):
+    pass
+
+
+class ExercisorScreen(Screen):
+    pass
+
+
+class Exercisor(BoxLayout):
     """
     """
     config = ConfigParser('Exercisor')
     exercises_path = ConfigParserProperty('./widgets/exercisor/exercise_data/',
                                           'Exercisor', 'exercises_path', 'Exercisor')
-    mesh_path = ConfigParserProperty('./widgets/exercisor/play/monkey.obj', 'Exercisor', 'mesh_path', 'Exercisor')
-
-    ctrl_btn = ObjectProperty(None)
-    renderer_layout = ObjectProperty(None)
-    controls_layout = ObjectProperty(None)
-    info_label = ObjectProperty(None)
-    frame_lab = ObjectProperty(None)
+    obj_mesh_path = ConfigParserProperty('./widgets/exercisor/play/monkey.obj', 'Exercisor', 'obj_mesh_path',
+                                         'Exercisor')
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.renderer = Renderer(smpl_faces_path=model_cfg.smpl_faces_path, frame_label=self.frame_lab,
-                                 mesh_path=self.mesh_path)
-        self.renderer_layout.add_widget(self.renderer)
 
         # Load the kv files
         path = os.path.dirname(os.path.abspath(__file__))
         for elem in ('play', 'editor'):
             Builder.load_file(os.path.join(path, elem, f'{elem}_controls.kv'))
 
+        Builder.load_file(os.path.join(path, 'controls.kv'))
+        self.mlthreads = {}
+        self.mlthreads['hmr'] = HMRThread(model_cfg, self.save_exercise)
+        self.mlthreads['smpl'] = SMPLThread(model_cfg.smpl_model_path, model_cfg.joint_type)
+
+    def on_kv_post(self, base_widget):
+
         # Load the saved exercises
         self.exercises = self._load_exercises(self.exercises_path)
 
-        self.mlthreads = {}
-        self.mlthreads['hmr_thread'] = HMRThread(model_cfg, self.update_mesh, self.save_exercise)
-        self.mlthreads['smpl_thread'] = SMPLThread(model_cfg.smpl_model_path, model_cfg.joint_type, self.update_mesh)
-
+        paths = {
+            'smpl_faces_path': model_cfg.smpl_faces_path,
+            'obj_mesh_path': self.obj_mesh_path,
+        }
+        renderer = Renderer(**paths)
+        self.ids.renderer_layout.add_widget(renderer)
+        play_renderers = [renderer, Renderer(**paths), Renderer(**paths)]
         self.actions = {
-            'playback': PlaybackAction(self.mlthreads['smpl_thread'], self.init_scene, self.reset_ui),
-            'predict': PredictAction(self.mlthreads['hmr_thread'], self.init_scene, self.reset_ui),
-            'play': PlayAction(self.mlthreads)
+            'playback': PlaybackAction(self.mlthreads['smpl'], renderer),
+            'predict': PredictAction(self.mlthreads['hmr'], renderer),
+            'play': PlayAction(self.mlthreads, play_renderers)
         }
 
-        self.change_control('normal')
+        self.color_adjust_dialog = ColorAdjustDialog()
+        self.color_adjust_dialog.bind(diffuse_light_color=partial(self.on_color_change, 'diffuse'))
+        self.color_adjust_dialog.bind(object_color=partial(self.on_color_change, 'object'))
+
+        self.change_control('normal')  # Displays the control buttons
 
     def update_config(self):
+        # Documentation for settings
         # self.config.read('config_path')
         pass
 
-    def change_control(self, state):
-        self.controls_layout.clear_widgets()
-        if state == 'down':
-            edit_actions = {key: self.actions[key] for key in ['playback', 'predict']}
-            self.controls = EditorControls(edit_actions, self.exercises, self.info_label)
-        else:
-            self.controls = PlayControls(self.exercises, self.init_scene,
-                                         self.resume_threads, self.reset_ui)
+    def subscribe(self):
+        # Documentation for wit.ai integration
+        wit_wrap = WitWrapper(self)
+        exported_functions = wit_wrap.export_functions()
 
-        self.reset_ui()
-        self.info_label.text = 'Waiting to choose an exercise..'
-        self.controls_layout.add_widget(self.controls)
+        return exported_functions
+
+    def change_control(self, state):
+        """ Change the buttons at the bottom of the window """
+        self.ids.ctrl_btn.state = state
+        self.ids.controls_layout.clear_widgets()
+        if state == 'down':
+            edit_actions = {key: self.actions[key] for key in ('playback', 'predict')}
+            self.controls = EditorControls(edit_actions, self.exercises, self.ids.info_label)
+        else:
+            play_actions = {key: self.actions[key] for key in ('play', 'predict')}
+            self.controls = PlayControls(play_actions, self.exercises, self.ids.info_label)
+
+        for action in self.actions.values():
+            action.stop()
+        self.ids.info_label.text = 'Waiting to choose an exercise..'
+        self.ids.controls_layout.add_widget(self.controls)
+
+    def toggle_color_adjust(self, state):
+        if state == 'down':
+            self.ids.renderer_layout.add_widget(self.color_adjust_dialog)
+        else:
+            self.ids.renderer_layout.remove_widget(self.color_adjust_dialog)
+
+    def on_color_change(self, color_type, _, new_color):
+        for renderer in self.ids.renderer_layout.walk(restrict=True):
+            if type(renderer) == Renderer:
+                if color_type == 'object':
+                    renderer.canvas['object_color'] = new_color
+                elif color_type == 'diffuse':
+                    renderer.canvas['diffuse_light'] = new_color
 
     def _load_exercises(self, folder):
         files = os.listdir(folder)
         exercises = {os.path.splitext(file)[0]: np.load(os.path.join(folder, file)) for file in files}
         return exercises
 
-    def render(self, object):
-        self.reset_ui()
-        self.init_scene(object)
-        if object == 'smpl_mesh' or object == 'smpl_kpnts':
-            self.mlthreads['hmr_thread'].resume()
-
-    def init_scene(self, object):
-        self.renderer.setup_scene(object)
-
-    def resume_threads(self, names, source=None, saving=False):
-        if 'hmr' in names:
-            if source is not None:
-                self.mlthreads['hmr_thread'].capture = source
-                self.info_label.text = f'Currently playing: {os.path.split(source)[-1]}'
-            if saving:
-                self.mlthreads['hmr_thread'].save()
-            self.mlthreads['hmr_thread'].resume()
-        if 'smpl' in names:
-            if source is not None:
-                self.mlthreads['smpl_thread'].exercise = self.exercises[source]
-                self.info_label.text = f'Currently playing: {source}'
-            self.mlthreads['smpl_thread'].resume()
-
-    @mainthread
-    def update_mesh(self, new_verts=None, new_kpnts=None, frame_index=None):
-        if self.renderer.curr_obj == 'smpl_mesh':
-            self.renderer.set_vertices(new_verts)
-        elif self.renderer.curr_obj == 'smpl_kpnts':
-            self.renderer.set_vertices(new_kpnts)
-
-        if self.actions['playback'].running and frame_index is not None:
-            # self.actions['playback'].update_frame()
-            if not self.controls.user_touching_slider:
-                self.controls.frame_indx = frame_index
-
     def save_exercise(self, filename, thetas):
+        """ Save the thetas of the exercise and update the list of available exercises
+
+        Parameters
+        ----------
+        filename: str
+            The name of the file to will be saved
+        thetas: list of lists (N x 82)
+            The 82 theta parameters of the smpl model for each frame
+        """
         with open(f'{self.exercises_path}/{filename}.npy', 'w+b') as f:
             np.save(f, thetas)
+
         self.exercises = self._load_exercises(self.exercises_path)
-        self.info_label.text = f'Exercise {filename} has been saved to {self.exercises_path}'
-        self.reset_ui()
+
+        self.ids.info_label.text = f'Exercise {filename} has been saved to {self.exercises_path}'
+        for action in self.actions.values():
+            action.stop()
 
     def anim_mesh(self, btn_state, animation):
         if not hasattr(self, 'renderer'):
@@ -139,11 +159,20 @@ class Exercisor(Widget):
         except UnboundLocalError:
             self.reset_buttons()
 
-    def reset_ui(self):
-        self.actions['predict'].stop()
-        self.actions['playback'].stop()
-        self.controls.reset_buttons()
-        self.renderer.reset_scene()
+    def stop_threads_exec(self):
+        for thread in self.mlthreads.values():
+            thread.resume()
+            thread.stop_exec()
+
+    @property
+    def controls(self):
+        return self._controls
+
+    @controls.setter
+    def controls(self, new_controls):
+        self._controls = new_controls
+        for action in self.actions.values():
+            action.controls = self._controls
 
     @property
     def exercises(self):
@@ -156,7 +185,15 @@ class Exercisor(Widget):
             self.controls.exercises = self._exercises
 
 
+class ExercisorApp(App):
+
+    def build(self):
+        return ExercisorScreen()
+
+    def on_stop(self):
+        self.root.ids.exercisor.stop_threads_exec()
+
+
 if __name__ == '__main__':
 
-    Builder.load_file('exercisor.kv')
-    runTouchApp(Exercisor())
+    ExercisorApp().run()

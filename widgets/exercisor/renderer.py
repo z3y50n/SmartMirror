@@ -6,92 +6,10 @@ from kivy.resources import resource_find
 from kivy.graphics.transformation import Matrix
 from kivy.graphics.opengl import glEnable, glDisable, GL_DEPTH_TEST
 from kivy.graphics import RenderContext, Callback, PushMatrix, PopMatrix, \
-    Color, Translate, Rotate, Mesh, UpdateNormalMatrix, Scale
+    Translate, Rotate, Mesh, UpdateNormalMatrix, Scale
 
-from play.objloader import ObjFile
-
-
-class MeshData(object):
-    def __init__(self, vertices=None, faces=None, **kwargs):
-        self.vertex_format = [
-            (b'v_pos', 3, 'float'),
-            (b'v_normal', 3, 'float'),
-            (b'v_tc0', 2, 'float')]
-
-        self.vertices = np.array(vertices)
-        self.faces = np.array(faces)
-
-        self.gl_verts = []
-        self.indices = []
-
-    def init_gl_verts(self):
-        vert_norms, self.indices = self.extract_norms_and_indices(self.vertices, self.faces)
-        self.verts_formatted = np.array([
-                np.concatenate((vert, norm, [0, 0])) for vert, norm in zip(self.vertices, vert_norms)
-            ])
-        self.gl_verts = self.verts_formatted.flatten().tolist()
-
-    def extract_norms_and_indices(self, verts, faces):
-        """ Extract the vertex normals and indices
-
-        Parameters
-        ----------
-        verts : array_like (N x 3)
-            The 3D coordinates of the N vertices of the object
-        faces: array_like (F x 3)
-            The F triangles, each described by the 3 vertices' indices
-
-        Returns
-        -------
-        vert_norms: array_like (N x 3)
-            The normals calculated for each vertex
-        indices: list
-            The indices of the vertices that form triangles in a flat list, as specified by opengl
-        """
-
-        vert_norms = np.zeros(shape=(len(verts), 3))
-        vert_count = np.zeros(len(verts)).astype('uint8')
-        indices = []
-        for tri in faces:
-            verts_tri = verts[tri]
-            face_norm = self.calc_face_norm(verts_tri)
-            for vid in tri:
-                vert_norms[vid] += face_norm
-                vert_count[vid] += 1
-                indices.append(vid)
-
-        vert_norms /= np.resize(vert_count, (vert_count.shape[0], 3))
-        return vert_norms, indices
-
-    def calc_face_norm(self, tri):
-        """ Calculates the surface normal for a triangle
-
-        Parameters
-        ----------
-        tri : array_like (3 x 3)
-            The 3D coordinates of the 3 vertices of the triangle
-
-        Returns
-        -------
-        n : array_like (3, )
-            The surface normal vector of the triangle
-        """
-
-        n = np.zeros(shape=(3))
-        u = tri[1] - tri[0]
-        v = tri[2] - tri[0]
-        n[0] = u[1] * v[2] - u[2] * v[1]
-        n[1] = u[2] * v[0] - u[0] * v[2]
-        n[2] = u[0] * v[1] - u[1] * v[0]
-        return n
-
-    def update_verts(self, new_verts):
-        if not hasattr(self, 'verts_formatted'):
-            return
-
-        for i in range(self.verts_formatted.shape[0]):
-            self.verts_formatted[i][:3] = new_verts[i]
-        self.gl_verts = self.verts_formatted.flatten().tolist()
+from play.mesh_utils import ObjFile, CustomMeshData
+from quaternion import quaternion_to_euler, euler_to_quaternion, quat_mult, euler_to_roll_pitch_yaw
 
 
 class Renderer(Widget):
@@ -99,18 +17,25 @@ class Renderer(Widget):
     MESH_MODES = ('points', 'line_strip', 'line_loop', 'lines', 'triangles', 'triangle_strip', 'triangle_fan')
     curr_mode = StringProperty('')
     nframes = NumericProperty(-1)
+    zoom_speed = 0.03
 
-    def __init__(self, smpl_faces_path=None, frame_label=None, mesh_path=None, **kwargs):
+    __slots__ = ['smpl_faces_path', 'obj_mesh_path']
 
-        self.frame_label = frame_label
-        self.smpl_faces = np.load(smpl_faces_path)
+    def __init__(self, smpl_faces_path=None, obj_mesh_path=None):
+
+        if smpl_faces_path is not None:
+            self.smpl_faces = np.load(smpl_faces_path)
+
+        if obj_mesh_path is not None:
+            self.scene = ObjFile(obj_mesh_path)
 
         # Make a canvas and add simple view
         self.canvas = RenderContext(compute_normal_mat=True)
         self.canvas.shader.source = resource_find('simple.glsl')
-        super(Renderer, self).__init__(**kwargs)
-
-        self.scene = ObjFile(mesh_path)
+        self.canvas['object_color'] = (0.93, 0.74, 0.71)
+        self.canvas['diffuse_light'] = (1.0, 0.7, 0.8)
+        self.canvas['ambient_light'] = (0.1, 0.1, 0.1)
+        super().__init__()
 
         self.create_mesh_fn = {
             'monkey': self.create_monkey_mesh,
@@ -131,30 +56,31 @@ class Renderer(Widget):
         self.timers = {}
         self.nframes = 0
         self.reset_scene()
+        self.store_quat = None
+        self.Dx, self.Dy = 0, 0
 
-    def setup_scene(self, object):
-        self.curr_obj = object
+    def setup_scene(self, rendered_obj):
+        self.curr_obj = rendered_obj
         with self.canvas:
             self.cb = Callback(self._setup_gl_context)
-            PushMatrix()
-            Color(0, 0, 0, 1)
             PushMatrix()
             self.trans = Translate(0, 0, -3)
             self.roty = Rotate(1, 0, 1, 0)
             self.rotx = Rotate(1, 1, 0, 0)
             self.scale = Scale(1, 1, 1)
+
+            self.yaw = Rotate(0, 0, 0, 1)
+            self.pitch = Rotate(0, -1, 0, 0)
+            self.roll = Rotate(0, 0, 1, 0)
+            self.quat = euler_to_quaternion([0, 0, 0])
+
             UpdateNormalMatrix()
-            if object in self.create_mesh_fn.keys():
-                self.create_mesh_fn[object]()
-            PopMatrix()
+            if rendered_obj in self.create_mesh_fn.keys():
+                self.create_mesh_fn[rendered_obj]()
             PopMatrix()
             self.cb = Callback(self._reset_gl_context)
 
-        asp = self.width / float(self.height)
-        proj = Matrix().view_clip(-asp, asp, -1, 1, 1.5, 100, 1)
-        self.canvas['projection_mat'] = proj
-        self.canvas['diffuse_light'] = (1.0, 1.0, 0.8)
-        self.canvas['ambient_light'] = (0.1, 0.1, 0.1)
+        self._update_glsl()
 
     def _setup_gl_context(self, *args):
         glEnable(GL_DEPTH_TEST)
@@ -162,12 +88,14 @@ class Renderer(Widget):
     def _reset_gl_context(self, *args):
         glDisable(GL_DEPTH_TEST)
 
+    def _update_glsl(self):
+        asp = self.width / float(self.height)
+        proj = Matrix().view_clip(-asp, asp, -1, 1, 1.5, 100, 1)
+        self.canvas['projection_mat'] = proj
+
     def reset_scene(self):
         self.canvas.clear()
         self._reset_timers(('scale', 'rotate', 'deform'))
-
-        if hasattr(self, 'mesh'):
-            del(self.mesh)
 
         self.nframes = 0
 
@@ -184,13 +112,13 @@ class Renderer(Widget):
             fmt=m.vertex_format,
             mode=self.curr_mode,
         )
-        self.mesh_data = MeshData(vertices=m.verts_raw, faces=m.faces)
+        self.mesh_data = CustomMeshData(vertices=m.verts_raw, faces=m.faces)
         self.mesh_data.gl_verts = m.vertices
         self.mesh_data.indices = m.indices
 
     def create_monkey_mesh_no_norms(self):
         m = list(self.scene.objects.values())[0]
-        self.mesh_data = MeshData(vertices=m.verts_raw, faces=m.faces)
+        self.mesh_data = CustomMeshData(vertices=m.verts_raw, faces=m.faces)
         self.mesh_data.init_gl_verts()
         self.mesh = Mesh(
             vertices=self.mesh_data.gl_verts,
@@ -205,7 +133,7 @@ class Renderer(Widget):
         # verts = np.random.laplace(scale=0.6, size=(10000, 3))
         # verts = np.random.lognormal(size=(10000, 3))
 
-        self.mesh_data = MeshData(vertices=verts, faces=self.smpl_faces.tolist())
+        self.mesh_data = CustomMeshData(vertices=verts, faces=self.smpl_faces)
         self.mesh_data.init_gl_verts()
         self.mesh = Mesh(
             vertices=self.mesh_data.gl_verts,
@@ -216,7 +144,7 @@ class Renderer(Widget):
 
     def create_smpl_mesh(self):
         verts = np.random.rand(6890, 3) * 2 - 1
-        self.mesh_data = MeshData(vertices=verts, faces=self.smpl_faces.tolist())
+        self.mesh_data = CustomMeshData(vertices=verts, faces=self.smpl_faces)
         self.mesh_data.init_gl_verts()
         self.curr_mode = 'triangles'
         self.mesh = Mesh(
@@ -228,7 +156,7 @@ class Renderer(Widget):
         self.rotx.angle += 180
 
     def create_smpl_kpnts(self):
-        self.mesh_data = MeshData()
+        self.mesh_data = CustomMeshData()
         verts = np.random.rand(24, 3) * 2 - 1
         verts_formatted = np.concatenate((verts, -np.ones(shape=(24, 3)), np.zeros(shape=(24, 2))), axis=1)
         indices = []
@@ -290,18 +218,35 @@ class Renderer(Widget):
             self.mesh.mode = self.curr_mode
 
     def on_touch_down(self, touch):
-        if self.collide_point(*touch.pos):
-            # The touch has occurred inside the widgets area.
-            touch.grab(self)
-            return True
+        if hasattr(self, 'mesh'):
+            if self.collide_point(*touch.pos):
+                # The touch has occurred inside the widgets area.
+                # Zoom in and out functionality
+                if touch.is_mouse_scrolling:
+                    prev_scale = list(self.scale.xyz)
+                    if touch.button == 'scrolldown':
+                        new_scale = [sc_ax + self.zoom_speed for sc_ax in prev_scale]
+                    elif touch.button == 'scrollup':
+                        new_scale = [sc_ax - self.zoom_speed for sc_ax in prev_scale]
+                    self.scale.xyz = tuple(new_scale)
+
+                # Accumulators for rotation
+                self.Dx, self.Dy = 0, 0
+                self.store_quat = self.quat
+                touch.grab(self)
 
     def on_touch_move(self, touch):
         if touch.grab_current is self:
             if hasattr(self, 'mesh'):
-                self.roty.angle += touch.dx
-                self.rotx.angle -= touch.dy
+                self.Dx -= touch.dx
+                self.Dy += touch.dy
+
+                new_quat = euler_to_quaternion([0.01 * self.Dx, 0.01 * self.Dy, 0])
+                self.quat = quat_mult(self.store_quat, new_quat)
+
+                euler_radians = quaternion_to_euler(self.quat)
+                self.roll.angle, self.pitch.angle, self.yaw.angle = euler_to_roll_pitch_yaw(euler_radians)
 
     def on_touch_up(self, touch):
         if touch.grab_current is self:
             touch.ungrab(self)
-            return True

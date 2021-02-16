@@ -7,7 +7,8 @@ from log import logger
 class MLThread(ABC, threading.Thread):
     """
     The abstract implementation of a machine learning module that will be run on a separate thread.
-    The thread executes instantly when it is constructed and enters the paused state.
+    The thread executes instantly when it is constructed so that the model will start loading
+    and then it enters the paused state.
 
     Attributes
     ----------
@@ -43,11 +44,12 @@ class MLThread(ABC, threading.Thread):
     """
 
     def __init__(self, model_name=None, target_fps=25, *args, **kwargs):
-        super(MLThread, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         self.model_name = model_name
-        self.name = self.model_name + '_Thread'
+        self.name = self.model_name + 'Thread'
         self.target_fps = target_fps
+        self.output_fn = None
 
         self._resumed = threading.Event()
         self._running = threading.Event()
@@ -60,7 +62,7 @@ class MLThread(ABC, threading.Thread):
     def resume(self):
         self._resumed.set()
 
-    def stop(self):
+    def stop_exec(self):
         self._running.clear()
 
     def is_paused(self):
@@ -68,18 +70,19 @@ class MLThread(ABC, threading.Thread):
 
     def run(self, *args, **kwargs):
 
+        logger.info(f'Loading {self.model_name}...')
         self.prepare_model()
-        logger.info(f'Loaded the {self.model_name} model.. Waiting to resume..')
+        logger.info(f'Loaded the {self.model_name} model')
 
         while(self._running.is_set()):
             self._resumed.wait()
-            start = time.time()
+            self.start_time = time.time()
             inputs = self.prepare_inputs()
             outputs = self.predict(inputs)
             self.process_outputs(outputs)
 
             # If processing finished fast, sleep to guarantee the target_fps
-            time.sleep(max(1./self.target_fps - (time.time() - start), 0))
+            time.sleep(max(1./self.target_fps - (time.time() - self.start_time), 0))
 
         self.cleaning_up()
         logger.info(f'{self.name} has finished execution')

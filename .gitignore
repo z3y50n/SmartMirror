@@ -6,3 +6,5 @@
 **/exercise_data/
 .vscode/
 docs/
+**/tests/
+.env
