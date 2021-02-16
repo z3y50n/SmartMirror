@@ -43,11 +43,16 @@ class Action:
         try:
             if resp['intent'] in self._commands:
                 res = self._commands[resp['intent']](**resp['args'])
-                if "config" in res:
-                    self._config_change(res[1:])
+                if res is not None:
+                    if "config" in res:
+                        self._config_change(res[1:])
+                    elif "update" in res:
+                        print(res)
+                        self._update_commands()
             else:
                 print("Not available command")
-        except:
+        except Exception as e:
+            print(e)
             print("Something went wrong while trying to perform action")
 
     def _config_change(self, conf):

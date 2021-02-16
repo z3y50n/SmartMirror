@@ -33,9 +33,7 @@ class Weather(Widget):
     def __init__(self, **kwargs):
         super(Weather, self).__init__(**kwargs)
 
-        Clock.schedule_once(self._initialize_frame)
-
-    def _initialize_frame(self, dt):
+    def on_kv_post(self, dt):
         self.update_config()
         Clock.schedule_interval(
             self._get_weather, int(self._update_interval))
@@ -64,8 +62,8 @@ class Weather(Widget):
             self.ids['temp_icon'].opacity = 0
             self._description = "Could not fetch weather data"
 
-    # TODO: Translate city name to lat&lon
     def request_day(self, datetime):
+        """TODO: Translate city name to lat&lon"""
         day = self._diff_of_dates(datetime[:10])
         if day > 7 or day < 0:
             print("I only know the weather for 7 days ahead :(")
@@ -76,6 +74,7 @@ class Weather(Widget):
         r = json.loads(r.text)
         print(json.dumps(r['daily'][day], indent=4))
         # print(json.dumps(r, indent=4))
+        return
 
     def _diff_of_dates(self, s_date: str):
         today = datetime.now().date()
@@ -90,6 +89,7 @@ class Weather(Widget):
         r = json.loads(r.text)
         hour = self._diff_of_hours(datetime)
         print(json.dumps(r['hourly'][hour], indent=4))
+        return
 
     def _diff_of_hours(self, date: str):
         days = self._diff_of_dates(date[:10])
@@ -100,9 +100,6 @@ class Weather(Widget):
         return diff
         
     def request_city(self, location: str):
-        # self._config.set("WeatherAPI", "city_name", location)
-        # self._config.write()
-        # self.update_config()
         return ("config", "WeatherAPI", "city_name", location)
 
     def subscribe(self):

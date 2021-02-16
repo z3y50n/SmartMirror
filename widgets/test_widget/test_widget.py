@@ -3,7 +3,6 @@ from kivy.uix.screenmanager import Screen
 
 def install(manager):
     manager.add_widget(TestScreen())
-    manager.add_widget(Button())
 
 class TestScreen(Screen):
     def __init__(self, **kw):
@@ -14,5 +13,5 @@ class TestScreen(Screen):
 
     def subscribe(self):
         return {
-            "function": self.func
+            "change_screen": self.func
         }

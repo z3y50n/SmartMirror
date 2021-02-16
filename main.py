@@ -37,11 +37,12 @@ class MainPage(ScreenManager):
         super(MainPage, self).__init__(**kwargs)
         self._welcome = random.choice(WELCOME_MESSAGES)
         self.installer()
+        print(self.children)
 
     def add_widget(self, screen):
         """Overload add_widget function for extra security"""
         if isinstance(screen, Screen):
-            super().add_widget(screen)
+            super(MainPage, self).add_widget(screen)
 
     def installer(self):
         """Call installers of every imported widget
@@ -68,9 +69,15 @@ class SmartMirrorApp(App):
 
     def subscribe(self):
         return {
-            "main": "hello",
-            "test": "world"
+            "change_screen": self.change_screen
         }
+
+    def change_screen(self, screen_name):
+        if self.root.has_screen(screen_name):
+            self.root.current = screen_name
+            return "update"
+        print("No screen with that name")
+        return
 
     @mainthread
     def show_settings(self):
