@@ -1,2 +1,10 @@
 **/__pycache__/
+*config.py
 *smartmirror.ini
+
+**/pretrained_models_data/
+**/exercise_data/
+.vscode/
+docs/
+**/tests/
+.env

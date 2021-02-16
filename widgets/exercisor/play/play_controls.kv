@@ -1,0 +1,34 @@
+#:kivy 2.0.0
+
+<PlayControls>:
+    orientation: 'horizontal'
+    name: 'play_controls'
+    ExerciseSpinner:
+        id: choose_exercise_spin
+        values: root.exercises.keys()
+        on_text: root.start_playing(self.text)
+    PlayPauseButton:
+        id: play_pause_btn
+        on_state: root.on_play_pause(self.state)
+    MeshOptions:
+        set_smpl_mode: root.set_smpl_mode
+    Spinner:
+        id: demo_render_spin
+        text: 'Render'
+        values: 'monkey', 'monkey_no_norms', 'random', 'smpl'
+        on_text: root.demo_render(self.text)
+    # CustomToggle:
+    #     id: tog_1
+    #     text: 'Scale'
+    #     on_state: root.anim_mesh(self.state, 'scale')
+    # CustomToggle:
+    #     id: tog_2
+    #     text: 'Rotate'
+    #     on_state: root.anim_mesh(self.state, 'rotate')
+    # CustomToggle:
+    #     id: tog_3
+    #     text: 'Deform'
+    #     on_state: root.anim_mesh(self.state, 'deform')
+    # CustomButton:
+    #     text: 'Change mesh mode'
+    #     on_release: root.change_mesh_mode()

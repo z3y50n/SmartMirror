@@ -1,0 +1,49 @@
+#:kivy 2.0.0
+
+<LoadDialog>:
+    BoxLayout:
+        size: root.size
+        pos: root.pos
+        orientation: "vertical"
+        FileChooserListView:
+            id: filechooser
+            path: root.video_input_path
+
+        BoxLayout:
+            size_hint_y: 0.05
+            Button:
+                text: "Cancel"
+                on_release: root.cancel()
+
+            Button:
+                text: "Load"
+                on_release: root.save_fn(filechooser.path, filechooser.selection)
+
+<EditorControls>:
+    orientation: 'horizontal'
+    name: 'editor_controls'
+    ExerciseSpinner:
+        id: choose_exercise_spin
+        values: root.exercises.keys()
+        on_text: root.start_playback(self.text)
+    PlayPauseButton:
+        id: play_pause_btn
+        on_state: root.on_play_pause(self.state)
+    Slider:
+        id: prog_slider
+        size_hint_x: 0.8
+        min: 0
+        max: 100
+        step: 1
+        value: root.frame_indx
+        value_track: True
+        value_track_color: 0.14, 0.41, 0.60, 1
+    MeshOptions:
+        set_smpl_mode: root.set_smpl_mode
+    CustomButton:
+        background_normal: './assets/file-save.png'
+        background_down: './assets/file-save.png'
+        border: 0, 0, 0, 0
+        size_hint: 0.3, 0.7
+        pos_hint: {'center_y': 0.5}
+        on_release: root.show_load_dialog()
