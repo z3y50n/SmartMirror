@@ -5,7 +5,7 @@
             "pretrained_models_path": "./widgets/exercisor/pretrained_models_data"
         },
         "ExercisorEditor": {
-            "video_input_path": "/home/ziposc/Videos",
+            "video_input_path": "/home/ziposc/Videos"
         }
     },
     "settings_json" : [

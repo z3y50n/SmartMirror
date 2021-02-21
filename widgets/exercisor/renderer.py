@@ -1,3 +1,4 @@
+from functools import partial
 import numpy as np
 from kivy.clock import Clock
 from kivy.uix.widget import Widget
@@ -15,49 +16,39 @@ from quaternion import quaternion_to_euler, euler_to_quaternion, quat_mult, eule
 class Renderer(Widget):
 
     MESH_MODES = ('points', 'line_strip', 'line_loop', 'lines', 'triangles', 'triangle_strip', 'triangle_fan')
-    curr_mode = StringProperty('')
-    nframes = NumericProperty(-1)
-    zoom_speed = 0.03
-
-    __slots__ = ['smpl_faces_path', 'obj_mesh_path']
+    _curr_mode = StringProperty('')
+    _nframes = NumericProperty(-1)
+    _zoom_speed = 0.03
 
     def __init__(self, smpl_faces_path=None, obj_mesh_path=None):
 
         if smpl_faces_path is not None:
-            self.smpl_faces = np.load(smpl_faces_path)
+            self._smpl_faces = np.load(smpl_faces_path)
 
         if obj_mesh_path is not None:
-            self.scene = ObjFile(obj_mesh_path)
+            self._monkey_scene = ObjFile(obj_mesh_path)
 
         # Make a canvas and add simple view
         self.canvas = RenderContext(compute_normal_mat=True)
         self.canvas.shader.source = resource_find('simple.glsl')
-        self.canvas['object_color'] = (0.93, 0.74, 0.71)
-        self.canvas['diffuse_light'] = (1.0, 0.7, 0.8)
-        self.canvas['ambient_light'] = (0.1, 0.1, 0.1)
+        self.canvas['ambient_light'] = (0.2, 0.2, 0.2)
         super().__init__()
 
-        self.create_mesh_fn = {
-            'monkey': self.create_monkey_mesh,
-            'monkey_no_norms': self.create_monkey_mesh_no_norms,
-            'random': self.create_rand_mesh,
-            'smpl_mesh': self.create_smpl_mesh,
-            'smpl_kpnts': self.create_smpl_kpnts,
+        self._create_mesh_fn = {
+            'monkey': self._create_monkey_mesh,
+            'monkey_no_norms': self._create_monkey_mesh_no_norms,
+            'random': self._create_rand_mesh,
+            'smpl_mesh': self._create_smpl_mesh,
+            'smpl_kpnts': self._create_smpl_kpnts,
+            'error_vectors': self._create_error_vectors
         }
 
-        self.animations = {
-            'scale': self.scale_anim,
-            'rotate': self.rotate_anim,
-            'deform': self.deform_anim
-        }
-
-        self.curr_mode = 'triangles'
+        self._curr_mode = 'triangles'
         self.curr_obj = None
-        self.timers = {}
-        self.nframes = 0
+        self._nframes = 0
         self.reset_scene()
-        self.store_quat = None
-        self.Dx, self.Dy = 0, 0
+        self._store_quat = None
+        self._dx_acc, self._dy_acc = 0, 0
 
     def setup_scene(self, rendered_obj):
         self.curr_obj = rendered_obj
@@ -75,8 +66,8 @@ class Renderer(Widget):
             self.quat = euler_to_quaternion([0, 0, 0])
 
             UpdateNormalMatrix()
-            if rendered_obj in self.create_mesh_fn.keys():
-                self.create_mesh_fn[rendered_obj]()
+            if rendered_obj in self._create_mesh_fn.keys():
+                self._create_mesh_fn[rendered_obj]()
             PopMatrix()
             self.cb = Callback(self._reset_gl_context)
 
@@ -95,68 +86,61 @@ class Renderer(Widget):
 
     def reset_scene(self):
         self.canvas.clear()
-        self._reset_timers(('scale', 'rotate', 'deform'))
+        self._nframes = 0
 
-        self.nframes = 0
-
-    def _reset_timers(self, timer_spec):
-        for timer in timer_spec:
-            if timer in self.timers.keys():
-                self.timers[timer].cancel()
-
-    def create_monkey_mesh(self):
-        m = list(self.scene.objects.values())[0]
-        self.mesh = Mesh(
+    def _create_monkey_mesh(self):
+        m = list(self._monkey_scene.objects.values())[0]
+        self._mesh = Mesh(
             vertices=m.vertices,
             indices=m.indices,
             fmt=m.vertex_format,
-            mode=self.curr_mode,
+            mode=self._curr_mode,
         )
-        self.mesh_data = CustomMeshData(vertices=m.verts_raw, faces=m.faces)
-        self.mesh_data.gl_verts = m.vertices
-        self.mesh_data.indices = m.indices
+        self._mesh_data = CustomMeshData(vertices=m.verts_raw, faces=m.faces)
+        self._mesh_data.gl_verts = m.vertices
+        self._mesh_data.indices = m.indices
 
-    def create_monkey_mesh_no_norms(self):
-        m = list(self.scene.objects.values())[0]
-        self.mesh_data = CustomMeshData(vertices=m.verts_raw, faces=m.faces)
-        self.mesh_data.init_gl_verts()
-        self.mesh = Mesh(
-            vertices=self.mesh_data.gl_verts,
-            indices=self.mesh_data.indices,
-            fmt=self.mesh_data.vertex_format,
-            mode=self.curr_mode
+    def _create_monkey_mesh_no_norms(self):
+        m = list(self._monkey_scene.objects.values())[0]
+        self._mesh_data = CustomMeshData(vertices=m.verts_raw, faces=m.faces)
+        self._mesh_data.init_gl_verts()
+        self._mesh = Mesh(
+            vertices=self._mesh_data.gl_verts,
+            indices=self._mesh_data.indices,
+            fmt=self._mesh_data.vertex_format,
+            mode=self._curr_mode
         )
 
-    def create_rand_mesh(self):
+    def _create_rand_mesh(self):
         verts = np.random.logistic(scale=0.5, size=(10000, 3))
         # verts = np.random.normal(scale=0.7, size=(10000, 3))
         # verts = np.random.laplace(scale=0.6, size=(10000, 3))
         # verts = np.random.lognormal(size=(10000, 3))
 
-        self.mesh_data = CustomMeshData(vertices=verts, faces=self.smpl_faces)
-        self.mesh_data.init_gl_verts()
-        self.mesh = Mesh(
-            vertices=self.mesh_data.gl_verts,
-            indices=self.mesh_data.indices,
-            fmt=self.mesh_data.vertex_format,
-            mode=self.curr_mode
+        self._mesh_data = CustomMeshData(vertices=verts, faces=self._smpl_faces)
+        self._mesh_data.init_gl_verts()
+        self._mesh = Mesh(
+            vertices=self._mesh_data.gl_verts,
+            indices=self._mesh_data.indices,
+            fmt=self._mesh_data.vertex_format,
+            mode=self._curr_mode
         )
 
-    def create_smpl_mesh(self):
+    def _create_smpl_mesh(self):
         verts = np.random.rand(6890, 3) * 2 - 1
-        self.mesh_data = CustomMeshData(vertices=verts, faces=self.smpl_faces)
-        self.mesh_data.init_gl_verts()
-        self.curr_mode = 'triangles'
-        self.mesh = Mesh(
-            vertices=self.mesh_data.gl_verts,
-            indices=self.mesh_data.indices,
-            fmt=self.mesh_data.vertex_format,
-            mode=self.curr_mode
+        self._mesh_data = CustomMeshData(vertices=verts, faces=self._smpl_faces)
+        self._mesh_data.init_gl_verts()
+        self._curr_mode = 'triangles'
+        self._mesh = Mesh(
+            vertices=self._mesh_data.gl_verts,
+            indices=self._mesh_data.indices,
+            fmt=self._mesh_data.vertex_format,
+            mode=self._curr_mode
         )
         self.rotx.angle += 180
 
-    def create_smpl_kpnts(self):
-        self.mesh_data = CustomMeshData()
+    def _create_smpl_kpnts(self):
+        self._mesh_data = CustomMeshData()
         verts = np.random.rand(24, 3) * 2 - 1
         verts_formatted = np.concatenate((verts, -np.ones(shape=(24, 3)), np.zeros(shape=(24, 2))), axis=1)
         indices = []
@@ -166,87 +150,109 @@ class Renderer(Widget):
                 continue
             indices.extend([kpnt, indx])
 
-        self.mesh_data.verts_formatted = verts_formatted
-        self.mesh_data.indices = indices
-        self.mesh_data.gl_verts = verts_formatted.flatten().tolist()
-        self.curr_mode = 'lines'
-        self.mesh = Mesh(
-            vertices=self.mesh_data.gl_verts,
-            indices=self.mesh_data.indices,
-            fmt=self.mesh_data.vertex_format,
-            mode=self.curr_mode
+        self._mesh_data.verts_formatted = verts_formatted
+        self._mesh_data.indices = indices
+        self._mesh_data.gl_verts = verts_formatted.flatten().tolist()
+        self._curr_mode = 'lines'
+        self._mesh = Mesh(
+            vertices=self._mesh_data.gl_verts,
+            indices=self._mesh_data.indices,
+            fmt=self._mesh_data.vertex_format,
+            mode=self._curr_mode
         )
         self.rotx.angle += 180
 
-    def animate_mesh(self, anim, play):
-        if not hasattr(self, 'mesh'):
+    def _create_error_vectors(self):
+        pass
+
+    def play_animation(self, animation_spec):
+        if not hasattr(self, '_mesh'):
             raise UnboundLocalError('The mesh does not exist')
 
-        if anim in self.animations.keys():
-            self._reset_timers((anim,))
-            if play:
-                self.timers[anim] = Clock.schedule_interval(self.animations[anim], 1/60.)
+        if animation_spec == 'correct_repetition':
+            start_color = self.canvas['object_color']
+            target_color = (0., 0.6, 0.)
+            Clock.schedule_interval(partial(self._reach_color_anim, start_color, target_color, True), 0.01)
 
-    def scale_anim(self, delta):
-        step = ((self.nframes) % 360) * np.pi / 180.
+    def _reach_color_anim(self, start_color, target_color, reverse, dt):
+        new_col = []
+        for i in range(3):
+            color_dif = target_color[i] - start_color[i]
+            col_comp = self.canvas['object_color'][i] + color_dif * 0.05
+            if (color_dif < 0 and col_comp < target_color[i]) \
+               or (color_dif > 0 and col_comp > target_color[i]):
+                col_comp = target_color[i]
+            new_col.append(col_comp)
+
+        self.canvas['object_color'] = tuple(new_col)
+        if self.canvas['object_color'] == target_color:
+            if reverse:
+                Clock.schedule_interval(partial(self._reach_color_anim, target_color, start_color, False), 0.07)
+            return False
+
+    def _scale_anim(self, delta):
+        step = ((self._nframes) % 360) * np.pi / 180.
         scale_factors = (np.sin(step) * 0.7 + 0.9, -np.sin(step) * 0.7 + 0.9, 1)
         self.scale.xyz = scale_factors
 
-    def rotate_anim(self, delta):
+    def _rotate_anim(self, delta):
         self.roty.angle += delta * 50
 
-    def deform_anim(self, delta):
-        vertices = self.mesh_data.vertices + np.random.normal(size=self.mesh_data.vertices.shape) * 0.02
+    def _deform_anim(self, delta):
+        vertices = self._mesh_data.vertices + np.random.normal(size=self._mesh_data.vertices.shape) * 0.02
         self.set_vertices(vertices)
 
     def set_vertices(self, vertices):
-        if not hasattr(self, 'mesh'):
+        if not hasattr(self, '_mesh'):
             return
 
-        if self.curr_obj == 'smpl_mesh' and self.nframes == 0:
-            self.mesh_data.vertices = vertices
-            self.mesh_data.init_gl_verts()
+        if self.curr_obj == 'smpl_mesh' and self._nframes == 0:
+            self._mesh_data.vertices = vertices
+            self._mesh_data.init_gl_verts()
 
-        self.mesh_data.update_verts(vertices)
-        self.mesh.vertices = self.mesh_data.gl_verts
-        self.nframes += 1
+        self._mesh_data.update_verts(vertices)
+        self._mesh.vertices = self._mesh_data.gl_verts
+        self._nframes += 1
 
     def change_mesh_mode(self):
-        cur_indx = self.MESH_MODES.index(self.curr_mode)
-        self.curr_mode = self.MESH_MODES[(cur_indx + 1) % len(self.MESH_MODES)]
-        if hasattr(self, 'mesh'):
-            self.mesh.mode = self.curr_mode
+        cur_indx = self._mesh_MODES.index(self._curr_mode)
+        self._curr_mode = self._mesh_MODES[(cur_indx + 1) % len(self._mesh_MODES)]
+        if hasattr(self, '_mesh'):
+            self._mesh.mode = self._curr_mode
 
     def on_touch_down(self, touch):
-        if hasattr(self, 'mesh'):
+        if hasattr(self, '_mesh'):
             if self.collide_point(*touch.pos):
                 # The touch has occurred inside the widgets area.
                 # Zoom in and out functionality
                 if touch.is_mouse_scrolling:
                     prev_scale = list(self.scale.xyz)
                     if touch.button == 'scrolldown':
-                        new_scale = [sc_ax + self.zoom_speed for sc_ax in prev_scale]
+                        new_scale = [sc_ax + self._zoom_speed for sc_ax in prev_scale]
                     elif touch.button == 'scrollup':
-                        new_scale = [sc_ax - self.zoom_speed for sc_ax in prev_scale]
+                        new_scale = [sc_ax - self._zoom_speed for sc_ax in prev_scale]
                     self.scale.xyz = tuple(new_scale)
 
                 # Accumulators for rotation
-                self.Dx, self.Dy = 0, 0
-                self.store_quat = self.quat
+                self._dx_acc, self._dy_acc = 0, 0
+                self._store_quat = self.quat
                 touch.grab(self)
+        return super().on_touch_down(touch)
 
     def on_touch_move(self, touch):
         if touch.grab_current is self:
-            if hasattr(self, 'mesh'):
-                self.Dx -= touch.dx
-                self.Dy += touch.dy
+            if hasattr(self, '_mesh'):
+                self._dx_acc -= touch.dx
+                self._dy_acc += touch.dy
 
-                new_quat = euler_to_quaternion([0.01 * self.Dx, 0.01 * self.Dy, 0])
-                self.quat = quat_mult(self.store_quat, new_quat)
+                new_quat = euler_to_quaternion([0.01 * self._dx_acc, 0.01 * self._dy_acc, 0])
+                self.quat = quat_mult(self._store_quat, new_quat)
 
                 euler_radians = quaternion_to_euler(self.quat)
                 self.roll.angle, self.pitch.angle, self.yaw.angle = euler_to_roll_pitch_yaw(euler_radians)
+        return super().on_touch_down(touch)
 
     def on_touch_up(self, touch):
         if touch.grab_current is self:
             touch.ungrab(self)
+        return super().on_touch_down(touch)

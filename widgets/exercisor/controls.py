@@ -1,8 +1,11 @@
 
+from kivy.properties import DictProperty
 from kivy.uix.boxlayout import BoxLayout
 
 
 class AbstractControls(BoxLayout):
+
+    exercises = DictProperty({}, force_dispatch=True, rebind=True)
 
     def __init__(self, actions, exercises, *args, **kwargs):
         self.actions = actions

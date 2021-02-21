@@ -4,8 +4,7 @@ import numpy as np
 
 from kivy.app import App
 from kivy.uix.widget import Widget
-from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.screenmanager import Screen
+from kivy.uix.screenmanager import Screen, ScreenManager
 from kivy.lang import Builder
 from kivy.properties import ConfigParserProperty
 from kivy.config import Config, ConfigParser
@@ -18,6 +17,7 @@ from editor.editor_controls import EditorControls
 from play.play_controls import PlayControls
 from actions import PlaybackAction, PredictAction, PlayAction
 from wit_wrapper import WitWrapper
+from log import logger
 
 # Config.set('modules', 'monitor', '')
 # Config.set('modules', 'showborder', '')
@@ -34,10 +34,6 @@ class ColorAdjustDialog(Widget):
 
 
 class ExercisorScreen(Screen):
-    pass
-
-
-class Exercisor(BoxLayout):
     """
     """
     config = ConfigParser('Exercisor')
@@ -47,39 +43,43 @@ class Exercisor(BoxLayout):
                                          'Exercisor')
 
     def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
         # Load the kv files
         path = os.path.dirname(os.path.abspath(__file__))
         for elem in ('play', 'editor'):
             Builder.load_file(os.path.join(path, elem, f'{elem}_controls.kv'))
-
         Builder.load_file(os.path.join(path, 'controls.kv'))
+
+        super().__init__(**kwargs)
+
+    def on_kv_post(self, base_widget):
         self.mlthreads = {}
         self.mlthreads['hmr'] = HMRThread(model_cfg, self.save_exercise)
         self.mlthreads['smpl'] = SMPLThread(model_cfg.smpl_model_path, model_cfg.joint_type)
-
-    def on_kv_post(self, base_widget):
-
-        # Load the saved exercises
-        self.exercises = self._load_exercises(self.exercises_path)
-
         paths = {
             'smpl_faces_path': model_cfg.smpl_faces_path,
             'obj_mesh_path': self.obj_mesh_path,
         }
-        renderer = Renderer(**paths)
-        self.ids.renderer_layout.add_widget(renderer)
-        play_renderers = [renderer, Renderer(**paths), Renderer(**paths)]
+        renderers = [Renderer(**paths), Renderer(**paths), Renderer(**paths)]
+        for rend in renderers:
+            self.ids.renderer_layout.add_widget(rend)
+
         self.actions = {
-            'playback': PlaybackAction(self.mlthreads['smpl'], renderer),
-            'predict': PredictAction(self.mlthreads['hmr'], renderer),
-            'play': PlayAction(self.mlthreads, play_renderers)
+            'playback': PlaybackAction(self.mlthreads['smpl'], renderers[0]),
+            'predict': PredictAction(self.mlthreads['hmr'], renderers[0]),
+            'play': PlayAction(self.mlthreads, renderers)
         }
 
         self.color_adjust_dialog = ColorAdjustDialog()
         self.color_adjust_dialog.bind(diffuse_light_color=partial(self.on_color_change, 'diffuse'))
         self.color_adjust_dialog.bind(object_color=partial(self.on_color_change, 'object'))
+        self.color_adjust_dialog.object_color = (0.95, 0.85, 0.95)
+        self.color_adjust_dialog.diffuse_light_color = (0.9, 0.9, 0.9)
+
+        # Load the saved exercises
+        self.exercises = self._load_exercises(self.exercises_path)
+        # Apply smoothing to the thetas
+        for name, exercise in self.exercises.items():
+            self.exercises[name] = self._smooth_thetas(exercise, 20)
 
         self.change_control('normal')  # Displays the control buttons
 
@@ -89,14 +89,14 @@ class Exercisor(BoxLayout):
         pass
 
     def subscribe(self):
-        # Documentation for wit.ai integration
+        """ Export the functions for the wit.ai integration """
         wit_wrap = WitWrapper(self)
         exported_functions = wit_wrap.export_functions()
 
         return exported_functions
 
     def change_control(self, state):
-        """ Change the buttons at the bottom of the window """
+        """ Change the buttons at the bottom center of the window """
         self.ids.ctrl_btn.state = state
         self.ids.controls_layout.clear_widgets()
         if state == 'down':
@@ -112,12 +112,22 @@ class Exercisor(BoxLayout):
         self.ids.controls_layout.add_widget(self.controls)
 
     def toggle_color_adjust(self, state):
+        """ Toggle the ColorAdjustment dialog """
         if state == 'down':
             self.ids.renderer_layout.add_widget(self.color_adjust_dialog)
         else:
             self.ids.renderer_layout.remove_widget(self.color_adjust_dialog)
 
     def on_color_change(self, color_type, _, new_color):
+        """ Change the color of the rendered meshes through the ColorAdjustment
+
+        Parameters
+        ----------
+        color_type: {'object', 'diffuse'}
+            Specify the type of the color to change, either the color of the object or the diffuse lighting color
+        new_color: tuple of floats in range [0, 1]
+            The new rgb values for the specified `color_type`
+        """
         for renderer in self.ids.renderer_layout.walk(restrict=True):
             if type(renderer) == Renderer:
                 if color_type == 'object':
@@ -126,6 +136,10 @@ class Exercisor(BoxLayout):
                     renderer.canvas['diffuse_light'] = new_color
 
     def _load_exercises(self, folder):
+        """ Load the exercises from the specified folder """
+        if not os.path.isdir(folder):
+            logger.warning(f'The path `{folder}` does not exist or it is not a folder.')
+            return
         files = os.listdir(folder)
         exercises = {os.path.splitext(file)[0]: np.load(os.path.join(folder, file)) for file in files}
         return exercises
@@ -149,23 +163,32 @@ class Exercisor(BoxLayout):
         for action in self.actions.values():
             action.stop()
 
-    def anim_mesh(self, btn_state, animation):
-        if not hasattr(self, 'renderer'):
-            raise UnboundLocalError('Renderer does not exist')
+    def _smooth_thetas(self, thetas, window):
+        """ Smooth the frames of the saved exercised via moving average on the thetas
 
-        state = True if btn_state == 'down' else False
-        try:
-            self.renderer.animate_mesh(animation, play=state)
-        except UnboundLocalError:
-            self.reset_buttons()
+        Parameters
+        ----------
+        thetas: array_like (N x 82)
+            The 82 SMPL parameters for each of the N frames
+        window: int
+            The sample window of the moving average
+        """
+        left = int(window / 2)
+        right = int(window / 2) if window % 2 == 0 else int(window / 2) + 1
+        for nf in range(0, thetas.shape[0]):
+            for kid in range(0, 72, 3):
+                lb = nf - left if nf - left >= 0 else 0
+                rb = nf + right if nf + right < thetas.shape[0] else thetas.shape[0] - 1
+                thetas[nf, kid: kid + 3] = thetas[lb: rb, kid: kid + 3].mean(axis=0)
 
-    def stop_threads_exec(self):
-        for thread in self.mlthreads.values():
-            thread.resume()
-            thread.stop_exec()
+        return thetas
 
     @property
     def controls(self):
+        """ The BoxLayout widget that holds the buttons at the bottom center of the screen.
+
+        When set, update the :attr: controls of each of the :class: AbstractAction.
+        """
         return self._controls
 
     @controls.setter
@@ -176,6 +199,10 @@ class Exercisor(BoxLayout):
 
     @property
     def exercises(self):
+        """ The dictionary {'name': thetas} that holds for each exercise its name and its saved thetas.
+
+        When set, updates the :attr: exercises of the :class: AbstractControls.
+        """
         return self._exercises
 
     @exercises.setter
@@ -185,13 +212,19 @@ class Exercisor(BoxLayout):
             self.controls.exercises = self._exercises
 
 
+class ExercisorManager(ScreenManager):
+    pass
+
+
 class ExercisorApp(App):
 
     def build(self):
-        return ExercisorScreen()
+        # return ExercisorScreen()
+        self.sm = ExercisorManager()
+        return self.sm
 
-    def on_stop(self):
-        self.root.ids.exercisor.stop_threads_exec()
+    def change_screen(self):
+        self.sm.current = 'test_screen' if self.sm.current == 'exercisor_screen' else 'exercisor_screen'
 
 
 if __name__ == '__main__':

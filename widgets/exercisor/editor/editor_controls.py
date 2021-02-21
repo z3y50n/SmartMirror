@@ -2,7 +2,7 @@ import os
 
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.popup import Popup
-from kivy.properties import ObjectProperty, ConfigParserProperty, DictProperty, NumericProperty
+from kivy.properties import ObjectProperty, ConfigParserProperty, NumericProperty
 
 from controls import AbstractControls
 
@@ -15,7 +15,6 @@ class LoadDialog(FloatLayout):
 
 class EditorControls(AbstractControls):
 
-    exercises = DictProperty({}, force_dispatch=True, rebind=True)
     frame_indx = NumericProperty(0)
 
     def __init__(self, edit_actions, exercises, info_label, *args, **kwargs):

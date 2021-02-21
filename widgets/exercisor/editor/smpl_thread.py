@@ -84,9 +84,9 @@ class SMPLThread(MLThread):
         return outputs
 
     def process_outputs(self, outputs):
+        """ Run the specified function with the outputs of the prediction and go to the next frame. """
         if not outputs:
             return
-        """ Run the specified function with the outputs of the prediction and go to the next frame. """
         frame = {'index': self.frame_index, 'timestamp': self.start_time}
         self.output_fn(outputs['vertices'][0], outputs['keypoints'][0], frame)
         self.frame_index = (self.frame_index + 1) % len(self.exercise)
