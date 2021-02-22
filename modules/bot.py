@@ -37,7 +37,7 @@ class Bot():
 
     def format_response(self, resp):
         intent = resp['intents'][0]['name']
-        args = {entity[0]['name'] if not entity[0]['name'].startswith("wit$") else entity[0]['name'][4:]: entity[0]['value']
+        args = {entity[0]['name'].split(":",1)[0] if not entity[0]['name'].startswith("wit$") else entity[0]['name'][4:]: entity[0]['value']
                 for entity in resp['entities'].values()}
         return {"intent": intent, "args": args}
 
