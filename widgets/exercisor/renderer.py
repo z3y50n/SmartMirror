@@ -1,15 +1,17 @@
+import os
 from functools import partial
 import numpy as np
 from kivy.clock import Clock
 from kivy.uix.widget import Widget
 from kivy.properties import StringProperty, NumericProperty
+import kivy.resources
 from kivy.resources import resource_find
 from kivy.graphics.transformation import Matrix
 from kivy.graphics.opengl import glEnable, glDisable, GL_DEPTH_TEST
 from kivy.graphics import RenderContext, Callback, PushMatrix, PopMatrix, \
     Translate, Rotate, Mesh, UpdateNormalMatrix, Scale
 
-from play.mesh_utils import ObjFile, CustomMeshData
+from play.mesh_utils import ObjFile, GLMeshData
 from quaternion import quaternion_to_euler, euler_to_quaternion, quat_mult, euler_to_roll_pitch_yaw
 
 
@@ -30,7 +32,9 @@ class Renderer(Widget):
 
         # Make a canvas and add simple view
         self.canvas = RenderContext(compute_normal_mat=True)
-        self.canvas.shader.source = resource_find('simple.glsl')
+
+        path = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'simple.glsl')
+        self.canvas.shader.source = resource_find(path)
         self.canvas['ambient_light'] = (0.2, 0.2, 0.2)
         super().__init__()
 
@@ -39,8 +43,7 @@ class Renderer(Widget):
             'monkey_no_norms': self._create_monkey_mesh_no_norms,
             'random': self._create_rand_mesh,
             'smpl_mesh': self._create_smpl_mesh,
-            'smpl_kpnts': self._create_smpl_kpnts,
-            'error_vectors': self._create_error_vectors
+            'smpl_kpnts': self._create_smpl_kpnts
         }
 
         self._curr_mode = 'triangles'
@@ -96,16 +99,15 @@ class Renderer(Widget):
             fmt=m.vertex_format,
             mode=self._curr_mode,
         )
-        self._mesh_data = CustomMeshData(vertices=m.verts_raw, faces=m.faces)
-        self._mesh_data.gl_verts = m.vertices
+        self._mesh_data = GLMeshData(vertices=np.array(m.verts_raw))
+        self._mesh_data.verts_gl = m.vertices
         self._mesh_data.indices = m.indices
 
     def _create_monkey_mesh_no_norms(self):
         m = list(self._monkey_scene.objects.values())[0]
-        self._mesh_data = CustomMeshData(vertices=m.verts_raw, faces=m.faces)
-        self._mesh_data.init_gl_verts()
+        self._mesh_data = GLMeshData(vertices=np.array(m.verts_raw), faces=m.faces)
         self._mesh = Mesh(
-            vertices=self._mesh_data.gl_verts,
+            vertices=self._mesh_data.verts_gl,
             indices=self._mesh_data.indices,
             fmt=self._mesh_data.vertex_format,
             mode=self._curr_mode
@@ -117,10 +119,9 @@ class Renderer(Widget):
         # verts = np.random.laplace(scale=0.6, size=(10000, 3))
         # verts = np.random.lognormal(size=(10000, 3))
 
-        self._mesh_data = CustomMeshData(vertices=verts, faces=self._smpl_faces)
-        self._mesh_data.init_gl_verts()
+        self._mesh_data = GLMeshData(vertices=verts, faces=self._smpl_faces)
         self._mesh = Mesh(
-            vertices=self._mesh_data.gl_verts,
+            vertices=self._mesh_data.verts_gl,
             indices=self._mesh_data.indices,
             fmt=self._mesh_data.vertex_format,
             mode=self._curr_mode
@@ -128,11 +129,10 @@ class Renderer(Widget):
 
     def _create_smpl_mesh(self):
         verts = np.random.rand(6890, 3) * 2 - 1
-        self._mesh_data = CustomMeshData(vertices=verts, faces=self._smpl_faces)
-        self._mesh_data.init_gl_verts()
+        self._mesh_data = GLMeshData(vertices=verts, faces=self._smpl_faces)
         self._curr_mode = 'triangles'
         self._mesh = Mesh(
-            vertices=self._mesh_data.gl_verts,
+            vertices=self._mesh_data.verts_gl,
             indices=self._mesh_data.indices,
             fmt=self._mesh_data.vertex_format,
             mode=self._curr_mode
@@ -140,8 +140,8 @@ class Renderer(Widget):
         self.rotx.angle += 180
 
     def _create_smpl_kpnts(self):
-        self._mesh_data = CustomMeshData()
         verts = np.random.rand(24, 3) * 2 - 1
+        self._mesh_data = GLMeshData(verts)
         verts_formatted = np.concatenate((verts, -np.ones(shape=(24, 3)), np.zeros(shape=(24, 2))), axis=1)
         indices = []
         parents = [-1,  0,  0,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  9,  9, 12, 13, 14, 16, 17, 18, 19, 20, 21]
@@ -152,17 +152,42 @@ class Renderer(Widget):
 
         self._mesh_data.verts_formatted = verts_formatted
         self._mesh_data.indices = indices
-        self._mesh_data.gl_verts = verts_formatted.flatten().tolist()
+        self._mesh_data.verts_gl = verts_formatted.flatten().tolist()
         self._curr_mode = 'lines'
         self._mesh = Mesh(
-            vertices=self._mesh_data.gl_verts,
+            vertices=self._mesh_data.verts_gl,
             indices=self._mesh_data.indices,
             fmt=self._mesh_data.vertex_format,
             mode=self._curr_mode
         )
         self.rotx.angle += 180
 
-    def _create_error_vectors(self):
+    def set_vertices(self, vertices, recalc_normals=False):
+        if not hasattr(self, '_mesh'):
+            return
+
+        if recalc_normals:
+            self._mesh_data.populate_normals_and_indices(vertices)
+
+        self._mesh_data.vertices = vertices
+        self._mesh.vertices = self._mesh_data.verts_gl
+        self._nframes += 1
+
+    def render_error_vectors(self, start_verts, vectors):
+        target_verts = start_verts + vectors
+        verts = np.concatenate((start_verts, target_verts), axis=0)
+        verts_formatted = np.concatenate((verts, -np.ones((verts.shape[0], 3)), np.zeros((verts.shape[0], 3))), axis=1)
+        for i in range(start_verts.shape[0]):
+            pass
+        with self.canvas:
+            self.cb = Callback(self._setup_gl_context)
+            PushMatrix()
+
+            # error_mesh = Mesh(
+            #     vertices=
+            # )
+            PopMatrix()
+            self.cb = Callback(self._reset_gl_context)
         pass
 
     def play_animation(self, animation_spec):
@@ -201,18 +226,6 @@ class Renderer(Widget):
     def _deform_anim(self, delta):
         vertices = self._mesh_data.vertices + np.random.normal(size=self._mesh_data.vertices.shape) * 0.02
         self.set_vertices(vertices)
-
-    def set_vertices(self, vertices):
-        if not hasattr(self, '_mesh'):
-            return
-
-        if self.curr_obj == 'smpl_mesh' and self._nframes == 0:
-            self._mesh_data.vertices = vertices
-            self._mesh_data.init_gl_verts()
-
-        self._mesh_data.update_verts(vertices)
-        self._mesh.vertices = self._mesh_data.gl_verts
-        self._nframes += 1
 
     def change_mesh_mode(self):
         cur_indx = self._mesh_MODES.index(self._curr_mode)

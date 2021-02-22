@@ -43,7 +43,7 @@ class HMRThread(MLThread):
         self.img_size = model_cfg.img_size
         self.save_fn = save_fn
 
-        self.source = ''
+        self._cap_source = ''
         self.capture = 'cam'
 
         self._saving = threading.Event()
@@ -120,7 +120,7 @@ class HMRThread(MLThread):
         if outputs is None:
             return
         if 'thetas' in outputs.keys():
-            filename = os.path.basename(self.source)
+            filename = os.path.basename(self._cap_source)
             filename = os.path.splitext(filename)[0]
             self.save_fn(filename, outputs['thetas'])
         elif 'verts' in outputs.keys() and 'joints3d' in outputs.keys():
@@ -155,14 +155,14 @@ class HMRThread(MLThread):
 
     @capture.setter
     def capture(self, source):
-        if self.source == source:
+        if self._cap_source == source:
             return
 
-        self.source = source
-        if self.source == 'cam':
+        self._cap_source = source
+        if self._cap_source == 'cam':
             self._capture = cv2.VideoCapture(0)
         else:
-            if os.path.exists(self.source):
-                self._capture = cv2.VideoCapture(self.source)
+            if os.path.exists(self._cap_source):
+                self._capture = cv2.VideoCapture(self._cap_source)
             else:
-                raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), self.source)
+                raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), self._cap_source)

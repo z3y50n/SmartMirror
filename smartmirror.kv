@@ -1,0 +1,35 @@
+#:kivy 2.0.0
+
+<MainPage>:
+    Screen:
+        name: "main screen"
+        FloatLayout:
+            Label:
+                id: welcome_msg
+                text: root._welcome
+                font_size: self.parent.width * 0.02
+                size_hint: 0.4, None
+                size: self.texture_size
+                pos_hint: {'center_x': 0.5, 'top': 0.98}
+            
+            Label:
+                id: status_label
+                size_hint: None, None
+                size: self.texture_size
+                text: ""
+                pos_hint:{"right": 0.95, "y": 0.1}
+
+            Weather:
+                id: weather
+                name: "weather"
+                size_hint: 0.3, 0.3
+                pos_hint: {"x": 0, "top":1}
+
+            MirrorClock:
+                name: "clock"
+                id: mirror_clock
+                size_hint: 0.3, 0.3
+                pos_hint: {"x": 0.7, "top": 1}
+
+<Label>:
+    font_name: "Roboto-Mono"

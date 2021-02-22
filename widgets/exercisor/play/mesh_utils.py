@@ -54,7 +54,7 @@ def extract_norms_and_indices(verts, faces):
     return vert_norms, indices
 
 
-class CustomMeshData(object):
+class GLMeshData(object):
     """ Holds the data required to render a 3D mesh
 
     Attributes
@@ -69,46 +69,74 @@ class CustomMeshData(object):
         The indices of the vertices that form triangles in a flat list, as specified by opengl
     verts_formatted: array_like (N x 8)
         The 3D coordinates, the normal vector and the 2D texture coordinates of the N vertices
-    gl_verts: list
+    verts_gl: list
         The openGL buffer that holds the vertices' data
     """
-    __slots__ = ('vertex_format', 'vertices', 'faces', 'indices', 'verts_formatted', 'gl_verts')
+    vertex_format = [
+        (b'v_pos', 3, 'float'),
+        (b'v_normal', 3, 'float'),
+        (b'v_tc0', 2, 'float')
+    ]
 
-    def __init__(self, vertices=None, faces=None, **kwargs):
-        self.vertex_format = [
-            (b'v_pos', 3, 'float'),
-            (b'v_normal', 3, 'float'),
-            (b'v_tc0', 2, 'float')]
+    def __init__(self, vertices=None, faces=None, normals=None, **kwargs):
+        self.verts_formatted = np.empty(shape=(vertices.shape[0], 8))
+        if faces is not None:
+            self.faces = np.array(faces)
+            self.populate_normals_and_indices(vertices)
+        if normals is not None:
+            self.normals = normals
 
-        self.vertices = np.array(vertices)
-        self.faces = np.array(faces)
+        self.texture_coords = np.zeros(shape=(vertices.shape[0], 2))
+        self.vertices = vertices
 
-        self.indices = []
-        self.gl_verts = []
+    def populate_normals_and_indices(self, vertices):
+        self.normals, self.indices = extract_norms_and_indices(vertices, self.faces)
 
-    def init_gl_verts(self):
-        """ Construct the :attr: verts_formatted and the :attr: gl_verts
-            using the :attr: vertices and the :attr: faces """
-        vert_norms, self.indices = extract_norms_and_indices(self.vertices, self.faces)
-        self.verts_formatted = np.array([
-                np.concatenate((vert, norm, [0, 0])) for vert, norm in zip(self.vertices, vert_norms)
-            ])
-        self.gl_verts = self.verts_formatted.flatten().tolist()
+    @property
+    def vertices(self):
+        return self._vertices
 
-    def update_verts(self, new_verts):
-        """ Update the :attr: verts_formatted and the :attr: gl_verts
-
-        Parameters
-        ----------
-        new_verts: array_like (N x 3)
-            The 3D coordinates of the new vertices of the mesh
-        """
-        if not hasattr(self, 'verts_formatted'):
-            return
-
+    @vertices.setter
+    def vertices(self, verts):
+        if self.verts_formatted.shape[0] != verts.shape[0]:
+            return (False, 'The number of vertices does not correspond to this mesh')
+        self._vertices = verts
         for i in range(self.verts_formatted.shape[0]):
-            self.verts_formatted[i][:3] = new_verts[i]
-        self.gl_verts = self.verts_formatted.flatten().tolist()
+            self.verts_formatted[i][:3] = self._vertices[i]
+        self.verts_formatted = self.verts_formatted
+
+    @property
+    def normals(self):
+        return self._normals
+
+    @normals.setter
+    def normals(self, norms):
+        if self.verts_formatted.shape[0] != norms.shape[0]:
+            return (False, 'The number of normals is not equal to the number of vertices')
+        self._normals = norms
+        for i in range(self.verts_formatted.shape[0]):
+            self.verts_formatted[i][3:6] = self._normals[i]
+
+    @property
+    def texture_coords(self):
+        return self._texture_coords
+
+    @texture_coords.setter
+    def texture_coords(self, text):
+        if self.verts_formatted.shape[0] != text.shape[0]:
+            return (False, 'The number of texture coordinates is not equal to the number of vertices')
+        self._texture_coords = text
+        for i in range(self.verts_formatted.shape[0]):
+            self.verts_formatted[i][6:] = self._texture_coords[i]
+
+    @property
+    def verts_formatted(self):
+        return self._verts_formatted
+
+    @verts_formatted.setter
+    def verts_formatted(self, verts_formatted):
+        self._verts_formatted = verts_formatted
+        self.verts_gl = self._verts_formatted.flatten().tolist()
 
 
 class MeshData(object):

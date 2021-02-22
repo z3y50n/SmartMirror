@@ -1,7 +1,7 @@
 import operator
 import numpy as np
 
-from kivy.clock import mainthread, Clock
+from kivy.clock import mainthread
 from renderer import Renderer
 
 
@@ -12,11 +12,12 @@ class AbstractAction():
         self.controls = None
         self.running = False
         self.paused = True
-        # self._sampl_wind = 10
+        # self._sampl_wind = 5
         # self._prev_verts = np.empty(shape=(0, 6890, 3))
 
     def initialize(self, smpl_mode):
         self.stop()
+        self._nframes = 0
         self.running = True
         self.init_renderers(smpl_mode)
 
@@ -27,11 +28,17 @@ class AbstractAction():
     def render_mesh(self, renderer=None, new_vertices=None, new_kpnts=None):
         if not type(renderer) == Renderer:
             return
+
+        recalc_normals = False
+        if self._nframes == 0:
+            recalc_normals = True
         if renderer.curr_obj == 'smpl_mesh':
             # new_vertices = self._smooth_verts(new_vertices)
-            renderer.set_vertices(new_vertices)
+            renderer.set_vertices(new_vertices, recalc_normals)
         elif renderer.curr_obj == 'smpl_kpnts':
             renderer.set_vertices(new_kpnts)
+
+        self._nframes += 1
 
     # Smoothing over vertices
     # def _smooth_verts(self, curr_verts):
@@ -235,8 +242,7 @@ class PlayAction(AbstractAction):
         sorted_d = sorted(d.items(), key=operator.itemgetter(1), reverse=True)
         max_dists_indices = [k[0] for k in sorted_d][:3]
 
-        self.error_renderer.setup_scene('error_vectors')
-        self.error_renderer.set_vertices(error_vectors[max_dists_indices])
+        self.error_renderer.render_error_vectors(predicted_kpnts[max_dists_indices], error_vectors[max_dists_indices])
 
     def _end_rep(self):
         """ Calculate the errors and play the feedback animations """

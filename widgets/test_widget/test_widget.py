@@ -1,8 +1,8 @@
 from kivy.uix.button import Button
 from kivy.uix.screenmanager import Screen
 
-def install(manager):
-    manager.add_widget(TestScreen())
+# def install(manager):
+#     manager.add_widget(TestScreen())
 
 class TestScreen(Screen):
     def __init__(self, **kw):

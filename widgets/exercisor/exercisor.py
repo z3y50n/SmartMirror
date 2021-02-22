@@ -106,10 +106,13 @@ class ExercisorScreen(Screen):
             play_actions = {key: self.actions[key] for key in ('play', 'predict')}
             self.controls = PlayControls(play_actions, self.exercises, self.ids.info_label)
 
-        for action in self.actions.values():
-            action.stop()
+        self._stop_actions()
         self.ids.info_label.text = 'Waiting to choose an exercise..'
         self.ids.controls_layout.add_widget(self.controls)
+
+    def _stop_actions(self):
+        for action in self.actions.values():
+            action.stop()
 
     def toggle_color_adjust(self, state):
         """ Toggle the ColorAdjustment dialog """
@@ -160,8 +163,7 @@ class ExercisorScreen(Screen):
         self.exercises = self._load_exercises(self.exercises_path)
 
         self.ids.info_label.text = f'Exercise {filename} has been saved to {self.exercises_path}'
-        for action in self.actions.values():
-            action.stop()
+        self._stop_actions()
 
     def _smooth_thetas(self, thetas, window):
         """ Smooth the frames of the saved exercised via moving average on the thetas
@@ -194,8 +196,7 @@ class ExercisorScreen(Screen):
     @controls.setter
     def controls(self, new_controls):
         self._controls = new_controls
-        for action in self.actions.values():
-            action.controls = self._controls
+        self._stop_actions()
 
     @property
     def exercises(self):
