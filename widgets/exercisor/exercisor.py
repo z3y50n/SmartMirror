@@ -4,7 +4,7 @@ import numpy as np
 
 from kivy.app import App
 from kivy.uix.widget import Widget
-from kivy.uix.screenmanager import Screen, ScreenManager
+from kivy.uix.screenmanager import Screen
 from kivy.lang import Builder
 from kivy.properties import ConfigParserProperty
 from kivy.config import Config, ConfigParser
@@ -45,9 +45,9 @@ class ExercisorScreen(Screen):
     def __init__(self, **kwargs):
         # Load the kv files
         path = os.path.dirname(os.path.abspath(__file__))
-        for elem in ('play', 'editor'):
-            Builder.load_file(os.path.join(path, elem, f'{elem}_controls.kv'))
         Builder.load_file(os.path.join(path, 'controls.kv'))
+        Builder.load_file(os.path.join(path, 'play', 'player.kv'))
+        Builder.load_file(os.path.join(path, 'editor', 'editor.kv'))
 
         super().__init__(**kwargs)
 
@@ -79,7 +79,7 @@ class ExercisorScreen(Screen):
         self.exercises = self._load_exercises(self.exercises_path)
         # Apply smoothing to the thetas
         for name, exercise in self.exercises.items():
-            self.exercises[name] = self._smooth_thetas(exercise, 20)
+            self.exercises[name] = self._smooth_thetas(exercise, 10)
 
         self.change_control('normal')  # Displays the control buttons
 
@@ -196,7 +196,8 @@ class ExercisorScreen(Screen):
     @controls.setter
     def controls(self, new_controls):
         self._controls = new_controls
-        self._stop_actions()
+        for action in self.actions.values():
+            action.controls = self._controls
 
     @property
     def exercises(self):
@@ -213,16 +214,10 @@ class ExercisorScreen(Screen):
             self.controls.exercises = self._exercises
 
 
-class ExercisorManager(ScreenManager):
-    pass
-
-
 class ExercisorApp(App):
 
     def build(self):
-        # return ExercisorScreen()
-        self.sm = ExercisorManager()
-        return self.sm
+        return ExercisorScreen()
 
     def change_screen(self):
         self.sm.current = 'test_screen' if self.sm.current == 'exercisor_screen' else 'exercisor_screen'

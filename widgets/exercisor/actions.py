@@ -1,8 +1,9 @@
 import operator
 import numpy as np
 
-from kivy.clock import mainthread
+from kivy.clock import mainthread, Clock
 from renderer import Renderer
+from play.progress_counter import ProgressCounter
 
 
 class AbstractAction():
@@ -29,12 +30,9 @@ class AbstractAction():
         if not type(renderer) == Renderer:
             return
 
-        recalc_normals = False
-        if self._nframes == 0:
-            recalc_normals = True
         if renderer.curr_obj == 'smpl_mesh':
             # new_vertices = self._smooth_verts(new_vertices)
-            renderer.set_vertices(new_vertices, recalc_normals)
+            renderer.set_vertices(new_vertices)
         elif renderer.curr_obj == 'smpl_kpnts':
             renderer.set_vertices(new_kpnts)
 
@@ -159,58 +157,90 @@ class PlayAction(AbstractAction):
         self.threads = threads
         renderer, self.pred_renderer, self.error_renderer = renderers
         super().__init__(renderer)
-        self.error_frame_window = 10
+        self._error_frame_window = 10
+        self._progress_counter = ProgressCounter(stop_action=self.stop)
 
-    def initialize(self, smpl_mode, exercise=None):
+    def initialize(self, smpl_mode: str, metadata, thetas=None):
+        """ Prepare for playback of an exercice with simultaneous predictions.
+
+        Parameters
+        ----------
+        smpl_mode: {'smpl_mesh', 'smpl_kpnts'}
+            The display mode of the smpl playback
+        metadata: dict
+            Store metadata, like the name, regarding the current exercise
+        thetas: array_like (N x 85)
+            The 85 smpl parameters for each of the N frames of the exercise
+        """
         super().initialize(smpl_mode)
 
         self.threads['smpl'].output_fn = self.render_correct_mesh
         self.threads['hmr'].output_fn = self.process_predictions
 
-        if exercise is not None:
-            self.exercise = exercise
-            self.threads['smpl'].exercise = exercise
+        # Prepare the SMPL playback
+        if thetas is not None:
+            self._thetas = thetas
+            self.threads['smpl'].exercise = thetas
+        # Prepare the HMR predictions
         self.threads['hmr'].capture = 'cam'
 
-        self.rep_count = 0
+        # Set up the progress counter depending on the exercise
+        self.renderer.parent.add_widget(self._progress_counter)
+        Clock.schedule_once(self._setup_progress_counter)
+        self._rep_count = 0
         self._start_new_rep()
+
+    def _setup_progress_counter(self, opts=None):
+        self._progress_counter.mode = 'repetition'
+        self._progress_counter.max_count = 5
+        self._progress_counter.counter = 1
+
+        # The following will be removed when exercise data are setup. For the time being, these are used for testing.
+        if self._progress_counter.mode == 'timer':
+            self._progress_counter.max_count = 10
+            self._progress_counter.counter = 10
 
     def init_renderers(self, smpl_mode):
         super().init_renderers(smpl_mode)
         self.pred_renderer.setup_scene('smpl_mesh' if smpl_mode == 'smpl_kpnts' else 'smpl_kpnts')
 
     def _start_new_rep(self):
-        self.rep_count += 1
+        self._rep_count += 1
+        if self._progress_counter.mode == 'repetition':
+            self._progress_counter.counter += 1
         self.frame_index = 0
         self._finished_rep = False
-        self._kpnts_mat = np.zeros((24, 3, self.exercise.shape[0]), dtype=np.float32)
-        self._kpnt_err_vecs = np.zeros((24, 3, self.exercise.shape[0]), dtype=np.float32)
-        self._smpl_frm_tmstamps = np.zeros((self.exercise.shape[0]), dtype=np.float32)
+        self._kpnts_mat = np.zeros((self._thetas.shape[0], 24, 3), dtype=np.float32)
+        self._kpnt_err_vecs = np.zeros((self._thetas.shape[0], 24, 3), dtype=np.float32)
+        self._smpl_frm_tmstamps = np.zeros((self._thetas.shape[0]), dtype=np.float32)
 
     @mainthread
     def render_correct_mesh(self, correct_verts=None, correct_kpnts=None, frame=None):
+        if self._thetas.shape[0] < frame['index']:
+            # The incoming frame is definetely from previous exercise
+            return
+
         super().render_mesh(self.renderer, correct_verts, correct_kpnts)
 
-        if self._smpl_frm_tmstamps.shape[0] > frame['index']:
-            # Makes sure that the recieved frame is not from a previous exercise
-            self._smpl_frm_tmstamps[frame['index']] = frame['timestamp']
-            self._kpnts_mat[:, :, frame['index']] = correct_kpnts
+        self._smpl_frm_tmstamps[frame['index']] = frame['timestamp']
+        self._kpnts_mat[frame['index'], :, :] = correct_kpnts
 
-        if frame['index'] < self.frame_index:
+        if frame['index'] == self._thetas.shape[0] - 1:
+            # When the frame index of the smpl thread has restarted, the repetition has ended
             self._finished_rep = True
 
     @mainthread
     def process_predictions(self, predicted_verts=None, predicted_kpnts=None, pred_tmstamp=None):
         if not self._smpl_frm_tmstamps.any():
+            # There are no frames from the smpl thread
             return
-
         correct_kpnts = self._get_keypoints_from_correct_frame(pred_tmstamp)
 
-        self._kpnt_err_vecs[:, :, self.frame_index] = (correct_kpnts - predicted_kpnts)
+        self._kpnt_err_vecs[self.frame_index, :, :] = (correct_kpnts - predicted_kpnts)
 
         # Calculate the momentary keypoint error vector
-        if self.frame_index >= self.error_frame_window:
-            momen_kpnt_err_vec = self._kpnt_err_vecs[:, :, self.frame_index - self.error_frame_window:].mean(axis=2)
+        if self.frame_index >= self._error_frame_window:
+            momen_kpnt_err_vec = self._kpnt_err_vecs[self.frame_index - self._error_frame_window:, :, :].mean(axis=0)
             self._render_error_vectors(momen_kpnt_err_vec, predicted_kpnts)
 
         # Render the predicted output
@@ -225,7 +255,7 @@ class PlayAction(AbstractAction):
         """ Return the keypoints that correspond to the predicted frame's timestamp """
         tm_diffs = [abs(pred_timestamp - corr_tmstamp) for corr_tmstamp in self._smpl_frm_tmstamps]
         min_diff_indx = tm_diffs.index(min(tm_diffs))
-        return self._kpnts_mat[:, :, min_diff_indx]
+        return self._kpnts_mat[min_diff_indx, :, :]
 
     def _render_error_vectors(self, error_vectors, predicted_kpnts):
         """ Display the error on the keypoints
@@ -247,11 +277,11 @@ class PlayAction(AbstractAction):
     def _end_rep(self):
         """ Calculate the errors and play the feedback animations """
         rep_mse = np.square(self._kpnt_err_vecs).mean()
-        kpnts_mse = np.square(self._kpnt_err_vecs).mean(axis=2)
+        kpnts_mse = np.square(self._kpnt_err_vecs).mean(axis=0)
         if rep_mse < 0.03:
             self.renderer.play_animation('correct_repetition')
 
-        print(f'Repetition: {self.rep_count} , total error: {rep_mse}')
+        print(f'Repetition: {self._rep_count} , total error: {rep_mse}')
 
     def demo_render(self, rendered_obj):
         self.stop()
@@ -261,6 +291,7 @@ class PlayAction(AbstractAction):
     def stop(self):
         for thread in self.threads.values():
             thread.pause()
+        self.renderer.parent.remove_widget(self._progress_counter)
         super().stop()
 
     def pause(self):

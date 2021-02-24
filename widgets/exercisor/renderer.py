@@ -4,7 +4,6 @@ import numpy as np
 from kivy.clock import Clock
 from kivy.uix.widget import Widget
 from kivy.properties import StringProperty, NumericProperty
-import kivy.resources
 from kivy.resources import resource_find
 from kivy.graphics.transformation import Matrix
 from kivy.graphics.opengl import glEnable, glDisable, GL_DEPTH_TEST
@@ -35,7 +34,7 @@ class Renderer(Widget):
 
         path = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'simple.glsl')
         self.canvas.shader.source = resource_find(path)
-        self.canvas['ambient_light'] = (0.2, 0.2, 0.2)
+        self.canvas['ambient_light'] = (0.2, 0.1, 0.2)
         super().__init__()
 
         self._create_mesh_fn = {
@@ -55,6 +54,7 @@ class Renderer(Widget):
 
     def setup_scene(self, rendered_obj):
         self.curr_obj = rendered_obj
+        self._recalc_normals = True
         with self.canvas:
             self.cb = Callback(self._setup_gl_context)
             PushMatrix()
@@ -162,12 +162,13 @@ class Renderer(Widget):
         )
         self.rotx.angle += 180
 
-    def set_vertices(self, vertices, recalc_normals=False):
+    def set_vertices(self, vertices):
         if not hasattr(self, '_mesh'):
             return
 
-        if recalc_normals:
+        if self._recalc_normals and self.curr_obj == 'smpl_mesh':
             self._mesh_data.populate_normals_and_indices(vertices)
+            self._recalc_normals = False
 
         self._mesh_data.vertices = vertices
         self._mesh.vertices = self._mesh_data.verts_gl

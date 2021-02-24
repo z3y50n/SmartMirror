@@ -3,33 +3,25 @@
     name: 'exercise screen'
     BoxLayout:
         orientation: 'vertical'    
-        size: root.width, root.height
+        size: root.size
         FloatLayout:
             size_hint_y: 0.10
-            CustomToggle:
-                id: ctrl_btn
-                size_hint_x: 0.08
-                color: 0, 0, 0, 1
-                markup: True
-                border: 0, 0, 0, 0
-                text: '[b][i]Editor[/i][/b]' if self.state == 'normal' else '[b][i]Play[/i][/b]'
+            BoxLayout:
+                orientation: 'horizontal'
                 pos_hint: {'right': 1, 'top': 1}
-                background_normal: './assets/right-arrow.png'
-                background_down: './assets/left-arrow.png'
-                on_state: root.change_control(self.state)
-            CustomButton:
-                text: 'change screen'
-                on_release: app.change_screen()
-                pos_hint: {'top': 1, 'center_x': 0.5}
-                size_hint: None, None
-                size: 100, 50
-            CustomToggle:
-                pos_hint: {'left': 1, 'top': 1}
-                size_hint_x: 0.08
-                background_normal: './assets/color-adjustments.png'
-                background_down: './assets/color-adjustments.png'
-                border: 0, 0, 0, 0
-                on_state: root.toggle_color_adjust(self.state)
+                size_hint_x: 0.2
+                spacing: 30
+                ColorAdjustToggle:
+                    on_state: root.toggle_color_adjust(self.state)
+                CustomToggle:
+                    id: ctrl_btn
+                    color: 0, 0, 0, 1
+                    markup: True
+                    border: 0, 0, 0, 0
+                    text: '[b][i]Editor[/i][/b]' if self.state == 'normal' else '[b][i]Play[/i][/b]'
+                    background_normal: './assets/right-arrow.png'
+                    background_down: './assets/left-arrow.png'
+                    on_state: root.change_control(self.state)
         FloatLayout:
             id: renderer_layout
         BoxLayout:
@@ -52,16 +44,3 @@
             anchor_y: 'bottom'
             id: controls_layout
             size_hint: 1, 0.1
-
-<ExercisorManager>:
-    ExercisorScreen:
-        name: 'exercisor_screen'
-    Screen:
-        name: 'test_screen'
-        FloatLayout:
-            CustomButton:
-                text: 'play with me'
-                pos_hint: {'top': 1, 'center_x': 0.5}
-                size_hint: None, None
-                size: 100, 50
-                on_release: app.change_screen()

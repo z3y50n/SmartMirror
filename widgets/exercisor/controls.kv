@@ -55,7 +55,7 @@
 <ColorAdjustDialog>:
     orientation: 'vertical'
     id: color_adjust
-    pos_hint: {'left': 1, 'top': 1}
+    pos_hint: {'right': 1, 'top': 1}
     size_hint: (0.35, 0.9)
     object_color: obj_color.rgb
     diffuse_light_color: diff_light_color.rgb
@@ -69,6 +69,13 @@
         ColorControl:
             id: diff_light_color
             title: 'Diffuse Lighting Color'
+
+<ColorAdjustToggle@CustomToggle>:
+    size_hint_y: 0.8
+    pos_hint: {'center_y': 0.5}
+    background_normal: './assets/color-adjustments.png'
+    background_down: './assets/color-adjustments.png'
+    border: 0, 0, 0, 0
 
 <ExerciseSpinner@Spinner>:
     size_hint: 0.3, 0.7 

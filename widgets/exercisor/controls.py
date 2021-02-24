@@ -5,7 +5,7 @@ from kivy.uix.boxlayout import BoxLayout
 
 class AbstractControls(BoxLayout):
 
-    exercises = DictProperty({}, force_dispatch=True, rebind=True)
+    exercises = DictProperty(force_dispatch=True, rebind=True)
 
     def __init__(self, actions, exercises, *args, **kwargs):
         self.actions = actions
@@ -14,7 +14,7 @@ class AbstractControls(BoxLayout):
         super().__init__(*args, **kwargs)
 
     def on_play_pause(self, state):
-        """ Controls the pausing and resuming of the active actions """
+        """ Control the pausing and resuming of the active actions """
 
         if state == 'down':
             for action in self.actions.values():
@@ -28,6 +28,15 @@ class AbstractControls(BoxLayout):
                 action.pause()
 
     def set_smpl_mode(self, mode, is_active):
+        """ Set the smpl mode depending on which checkbutton is active. The playback remains in the paused or playing state.
+
+        Parameters
+        ----------
+        mode: {'mesh', 'kpnts'}
+            Specifies which mode corresponds to the checkbox that called the function
+        is_active: boolean
+            The state of the checkbox. When it is active, the corresponding mode is set
+        """
         if is_active:
             self.smpl_mode = f'smpl_{mode}'
             for action in self.actions.values():
