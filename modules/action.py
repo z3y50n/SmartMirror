@@ -1,3 +1,5 @@
+from modules import speech
+
 class Action:
     _commands = {}
     _current_screen = None
@@ -49,6 +51,8 @@ class Action:
                     elif "update" in res:
                         print(res)
                         self._update_commands()
+                    elif "speech" in res:
+                        speech.Speech.speak_back(res[1])
             else:
                 print("Not available command")
         except Exception as e:

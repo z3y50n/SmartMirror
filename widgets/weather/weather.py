@@ -74,7 +74,8 @@ class Weather(Widget):
         r = json.loads(r.text)
         print(json.dumps(r['daily'][day], indent=4))
         # print(json.dumps(r, indent=4))
-        return
+        temperature = 10
+        return ('speech', f"The weather tomorrow will be sunny with {temperature} degrees Celcius")
 
     def _diff_of_dates(self, s_date: str):
         today = datetime.now().date()

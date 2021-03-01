@@ -34,6 +34,7 @@ class Controller(threading.Thread):
 
     def run(self):
         self.resume()
+        # self._s.speak_back('hello my dear friend')
         self._authenticate_mode()
         self._command_mode()
 

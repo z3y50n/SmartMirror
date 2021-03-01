@@ -1,5 +1,7 @@
-import asyncio
 from configparser import ConfigParser
+from gtts import gTTS
+from pydub import AudioSegment
+from pydub.playback import play
 import os
 from kivy import config
 
@@ -52,6 +54,13 @@ class Speech():
         self._listen_for_audio(label)
         self._speech_to_text()
         print(self._text)
+
+    def speak_back(text):
+        tts = gTTS(text=text, lang='en')
+        tts.save("temp.mp3")
+        speech = AudioSegment.from_mp3('temp.mp3')
+        play(speech)
+        os.remove("temp.mp3")
 
 
 if __name__ == "__main__":
