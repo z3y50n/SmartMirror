@@ -37,8 +37,11 @@ class Bot():
 
     def format_response(self, resp):
         intent = resp['intents'][0]['name']
-        args = {entity[0]['name'].split(":",1)[0] if not entity[0]['name'].startswith("wit$") else entity[0]['name'][4:]: entity[0]['value']
-                for entity in resp['entities'].values()}
+        if intent == "request_location":
+            args = {'location': resp['entities']['wit$location:location'][0]['resolved']['values'][0]['name']}
+        else:
+            args = {entity[0]['name'].split(":",1)[0] if not entity[0]['name'].startswith("wit$") else entity[0]['name'][4:]: entity[0]['value']
+                    for entity in resp['entities'].values()}
         return {"intent": intent, "args": args}
 
 

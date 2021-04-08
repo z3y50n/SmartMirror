@@ -7,6 +7,7 @@ class Action:
     def __init__(self, gui) -> None:
         self._gui = gui
         self._update_commands()
+        self._s = speech.Speech()
 
     def _update_commands(self):
         """update available commands and current screen"""
@@ -52,7 +53,7 @@ class Action:
                         print(res)
                         self._update_commands()
                     elif "speech" in res:
-                        speech.Speech.speak_back(res[1])
+                        self._s.speak_back(res[1])
             else:
                 print("Not available command")
         except Exception as e:

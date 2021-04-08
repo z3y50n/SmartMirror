@@ -14,8 +14,9 @@ class Controller(threading.Thread):
         config = ConfigParser()
         config.read(CONFIG_PATH)
 
-        self._s = speech.Speech(config["Speech"]["launch_phrase"], 
-                                config["Speech"]["close_phrase"])
+        self._launch_phrase = config["Speech"]["launch_phrase"]
+        self._close_phrase = config["Speech"]["close_phrase"]
+        self._s = speech.Speech()
         self._gui = gui
         self._widgets = {id: widget for id, widget in self._gui.root.ids.items()}
 
@@ -26,6 +27,20 @@ class Controller(threading.Thread):
         self.daemon = True
         self.start()
 
+    def _check_launch_phrase(self, text):
+        if text == self._launch_phrase:
+            return True
+        return False
+
+    def _check_close_phrase(self, text):
+        if text == self._close_phrase:
+            return True
+        return False
+
+    def _check_close(self, text):
+        if text == "quit" or text == "exit":
+            self._gui.stop()
+
     def pause(self):
         self._running.clear()
 
@@ -34,29 +49,31 @@ class Controller(threading.Thread):
 
     def run(self):
         self.resume()
-        # self._s.speak_back('hello my dear friend')
         self._authenticate_mode()
         self._command_mode()
 
     def _authenticate_mode(self):
-        while not self._s.check_launch_phrase():
-            self._s.speak(self._gui.root.ids['status_label'])
+        text = self._s.speak(self._gui.root.ids['status_label'])
+        while not self._check_launch_phrase(text):
+            self._check_close(text)
+            text = self._s.speak(self._gui.root.ids['status_label'])
+
         print("You gained access")
+        self._s.speak_back("How may I help you?")
 
     def _command_mode(self):
-        while not self._s.check_close_phrase():
+        text = self._s.speak(self._gui.root.ids['status_label'])
+        while not self._check_close_phrase(text):
             self._running.wait()
-            self._s.speak(self._gui.root.ids['status_label'])
             
-            if self._s.get_text() == "quit" or self._s.get_text() == "exit":
-                self._gui.stop()
+            self._check_close(text)
             
-            resp = self._bot.message(self._s.get_text())
-            if not resp:
-                continue
-            print(resp)
-            
-            self._action.perform(resp)
+            resp = self._bot.message(text)
+            if resp:
+                print(resp)
+                self._action.perform(resp)
+                
+            text = self._s.speak(self._gui.root.ids['status_label'])
             
         self.run()
 

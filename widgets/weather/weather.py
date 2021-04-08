@@ -3,7 +3,6 @@ from datetime import datetime
 import json
 import os
 import requests
-import time
 
 from kivy.base import runTouchApp
 from kivy.clock import Clock
@@ -14,6 +13,8 @@ from kivy.uix.widget import Widget
 
 CONFIG_PATH = os.path.join(os.path.abspath(os.path.join(
     __file__, os.path.pardir, os.path.pardir, os.path.pardir)), "smartmirror.ini")
+CITIES_PATH = os.path.join(os.path.abspath(os.path.join(
+    __file__, os.path.pardir, os.path.pardir, os.path.pardir)), "assets", "city.list.json")
 
 WEATHER_URL = "https://api.openweathermap.org/data/2.5/"
 DATE_FORMAT = "%Y-%m-%d"
@@ -29,6 +30,8 @@ class Weather(Widget):
     _update_interval = ConfigParserProperty(
         "", "weather", "update_interval", "Weather")
     _config = ConfigParser(name="Weather")
+    _lon = 0
+    _lat = 0
 
     def __init__(self, **kwargs):
         super(Weather, self).__init__(**kwargs)
@@ -40,6 +43,7 @@ class Weather(Widget):
 
     def update_config(self):
         self._config.read(CONFIG_PATH)
+        self._city_to_coord()
         self._get_weather(0)
 
     def _get_weather(self, dt):
@@ -62,35 +66,12 @@ class Weather(Widget):
             self.ids['temp_icon'].opacity = 0
             self._description = "Could not fetch weather data"
 
-    def request_day(self, datetime):
-        """TODO: Translate city name to lat&lon"""
-        day = self._diff_of_dates(datetime[:10])
-        if day > 7 or day < 0:
-            print("I only know the weather for 7 days ahead :(")
-            return
-
-        r = requests.get(
-            f"{WEATHER_URL}onecall?lat=40.623341&lon=22.95369&units=metric&exclude=current,minutely,hourly&appid={self._api_key}")
-        r = json.loads(r.text)
-        print(json.dumps(r['daily'][day], indent=4))
-        # print(json.dumps(r, indent=4))
-        temperature = 10
-        return ('speech', f"The weather tomorrow will be sunny with {temperature} degrees Celcius")
-
     def _diff_of_dates(self, s_date: str):
         today = datetime.now().date()
         s_date = datetime.strptime(s_date, DATE_FORMAT).date()
         diff = s_date - today
         print(f"Difference: {diff} Days")
         return diff.days
-
-    def request_hour(self, datetime):
-        r = requests.get(
-            f"{WEATHER_URL}onecall?lat=40.623341&lon=22.95369&units=metric&exclude=current,minutely,daily&appid={self._api_key}")
-        r = json.loads(r.text)
-        hour = self._diff_of_hours(datetime)
-        print(json.dumps(r['hourly'][hour], indent=4))
-        return
 
     def _diff_of_hours(self, date: str):
         days = self._diff_of_dates(date[:10])
@@ -100,12 +81,52 @@ class Weather(Widget):
         print(f"Difference: {diff} hours")
         return diff
         
-    def request_city(self, location: str):
-        return ("config", "WeatherAPI", "city_name", location)
+    def _city_to_coord(self):
+        with open(CITIES_PATH, "r") as f:
+            cities = json.load(f)
+        for city in cities:
+            if city['name'].lower() == self._city_name.lower():
+                self._lon = city['coord']['lon']
+                self._lat = city['coord']['lat']
+
+    def request_day(self, datetime):
+        """TODO: Translate city name to lat&lon"""
+        day = self._diff_of_dates(datetime[:10])
+        if day > 7 or day < 0:
+            return ('speech', "I only know the weather for 7 days ahead")
+
+        r = requests.get(
+            f"{WEATHER_URL}onecall?lat={self._lat}&lon={self._lon}&units=metric&exclude=current,minutely,hourly&appid={self._api_key}")
+        
+        r = json.loads(r.text)
+        # print(json.dumps(r['daily'][day], indent=4))
+        when = "tomorrow" if day==1 else f"in {day} days"
+        desc = r['daily'][day]['weather'][0]['main']
+        temperature = r['daily'][day]['temp']['day']
+
+        return ('speech', f"The weather {when} will be {desc} with {temperature} degrees Celcius")
+
+    def request_hour(self, datetime):
+        hour = self._diff_of_hours(datetime)
+        if hour > 47 or hour < 0:
+            return ('speech', 'I only know the weather for 48 hours ahead')
+
+        r = requests.get(
+            f"{WEATHER_URL}onecall?lat={self._lat}&lon={self._lon}&units=metric&exclude=current,minutely,daily&appid={self._api_key}")
+        r = json.loads(r.text)
+        
+        when = hour
+        desc = r['hourly'][hour]['weather'][0]['main']
+        temperature = r['hourly'][hour]['temp']
+
+        return ('speech', f"The weather in {when} hours will be {desc} with {temperature} degrees Celcius")
+
+    def request_location(self, location: str):
+        return ("config", "weather", "city_name", location)
 
     def subscribe(self):
         return {
-            "request_city": self.request_city,
+            "request_location": self.request_location,
             "request_hour": self.request_hour,
             "request_day": self.request_day
         }
