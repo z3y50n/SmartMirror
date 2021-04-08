@@ -90,7 +90,6 @@ class Weather(Widget):
                 self._lat = city['coord']['lat']
 
     def request_day(self, datetime):
-        """TODO: Translate city name to lat&lon"""
         day = self._diff_of_dates(datetime[:10])
         if day > 7 or day < 0:
             return ('speech', "I only know the weather for 7 days ahead")
@@ -99,12 +98,12 @@ class Weather(Widget):
             f"{WEATHER_URL}onecall?lat={self._lat}&lon={self._lon}&units=metric&exclude=current,minutely,hourly&appid={self._api_key}")
         
         r = json.loads(r.text)
-        # print(json.dumps(r['daily'][day], indent=4))
         when = "tomorrow" if day==1 else f"in {day} days"
         desc = r['daily'][day]['weather'][0]['main']
         temperature = r['daily'][day]['temp']['day']
 
         return ('speech', f"The weather {when} will be {desc} with {temperature} degrees Celcius")
+        # print(json.dumps(r['daily'][day], indent=4))
 
     def request_hour(self, datetime):
         hour = self._diff_of_hours(datetime)
