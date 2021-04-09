@@ -33,7 +33,7 @@ class Speech():
             self._text = ""
             print("I could not understand you")
 
-    def speak(self, label=None):
+    def listen(self, label=None):
         self._listen_for_audio(label)
         self._speech_to_text()
         print(self._text)

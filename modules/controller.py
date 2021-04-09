@@ -39,6 +39,7 @@ class Controller(threading.Thread):
 
     def _check_close(self, text):
         if text == "quit" or text == "exit":
+            self._s.speak_back("Goodbye!")
             self._gui.stop()
 
     def pause(self):
@@ -53,16 +54,16 @@ class Controller(threading.Thread):
         self._command_mode()
 
     def _authenticate_mode(self):
-        text = self._s.speak(self._gui.root.ids['status_label'])
+        text = self._s.listen(self._gui.root.ids['status_label'])
         while not self._check_launch_phrase(text):
             self._check_close(text)
-            text = self._s.speak(self._gui.root.ids['status_label'])
+            text = self._s.listen(self._gui.root.ids['status_label'])
 
         print("You gained access")
         self._s.speak_back("How may I help you?")
 
     def _command_mode(self):
-        text = self._s.speak(self._gui.root.ids['status_label'])
+        text = self._s.listen(self._gui.root.ids['status_label'])
         while not self._check_close_phrase(text):
             self._running.wait()
             
@@ -73,7 +74,7 @@ class Controller(threading.Thread):
                 print(resp)
                 self._action.perform(resp)
                 
-            text = self._s.speak(self._gui.root.ids['status_label'])
+            text = self._s.listen(self._gui.root.ids['status_label'])
             
         self.run()
 
