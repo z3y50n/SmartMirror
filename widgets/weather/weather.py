@@ -89,20 +89,29 @@ class Weather(Widget):
                 self._lon = city['coord']['lon']
                 self._lat = city['coord']['lat']
 
-    def request_day(self, datetime):
-        day = self._diff_of_dates(datetime[:10])
-        if day > 7 or day < 0:
-            return ('speech', "I only know the weather for 7 days ahead")
+    def request_day(self, datetime="today"):
+        if datetime == "today":
+            day = 0
+        else:
+            day = self._diff_of_dates(datetime[:10])
+            if day > 7 or day < 0:
+                return ('speech', "I only know the weather for 7 days ahead")
 
         r = requests.get(
             f"{WEATHER_URL}onecall?lat={self._lat}&lon={self._lon}&units=metric&exclude=current,minutely,hourly&appid={self._api_key}")
         
         r = json.loads(r.text)
-        when = "tomorrow" if day==1 else f"in {day} days"
+
+        if day == 0:
+            when = "today is"
+        elif day == 1:
+            when = "tommorrow will be"
+        else:
+            when = f"in {day} days will be"
         desc = r['daily'][day]['weather'][0]['main']
         temperature = r['daily'][day]['temp']['day']
 
-        return ('speech', f"The weather {when} will be {desc} with {temperature} degrees Celcius")
+        return ('speech', f"The weather {when} {desc} with {temperature} degrees Celcius")
         # print(json.dumps(r['daily'][day], indent=4))
 
     def request_hour(self, datetime):
@@ -114,11 +123,11 @@ class Weather(Widget):
             f"{WEATHER_URL}onecall?lat={self._lat}&lon={self._lon}&units=metric&exclude=current,minutely,daily&appid={self._api_key}")
         r = json.loads(r.text)
         
-        when = hour
+        when = "now is" if hour==0 else f"in {hour} hours will be"
         desc = r['hourly'][hour]['weather'][0]['main']
         temperature = r['hourly'][hour]['temp']
 
-        return ('speech', f"The weather in {when} hours will be {desc} with {temperature} degrees Celcius")
+        return ('speech', f"The weather {when} {desc} with {temperature} degrees Celcius")
 
     def request_location(self, location: str):
         return ("config", "weather", "city_name", location)
