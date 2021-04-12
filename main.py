@@ -75,7 +75,7 @@ class SmartMirrorApp(App):
     def change_screen(self, screen_name):
         if self.root.has_screen(screen_name):
             self.root.current = screen_name
-            return "update"
+            return ["update"]
         print("No screen with that name")
         return
 

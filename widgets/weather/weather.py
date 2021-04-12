@@ -95,7 +95,7 @@ class Weather(Widget):
         else:
             day = self._diff_of_dates(datetime[:10])
             if day > 7 or day < 0:
-                return ('speech', "I only know the weather for 7 days ahead")
+                return [('speech', "I only know the weather for 7 days ahead")]
 
         r = requests.get(
             f"{WEATHER_URL}onecall?lat={self._lat}&lon={self._lon}&units=metric&exclude=current,minutely,hourly&appid={self._api_key}")
@@ -111,13 +111,13 @@ class Weather(Widget):
         desc = r['daily'][day]['weather'][0]['main']
         temperature = r['daily'][day]['temp']['day']
 
-        return ('speech', f"The weather {when} {desc} with {temperature} degrees Celcius")
+        return [('speech', f"The weather {when} {desc} with {temperature} degrees Celcius")]
         # print(json.dumps(r['daily'][day], indent=4))
 
     def request_hour(self, datetime):
         hour = self._diff_of_hours(datetime)
         if hour > 47 or hour < 0:
-            return ('speech', 'I only know the weather for 48 hours ahead')
+            return [('speech', 'I only know the weather for 48 hours ahead')]
 
         r = requests.get(
             f"{WEATHER_URL}onecall?lat={self._lat}&lon={self._lon}&units=metric&exclude=current,minutely,daily&appid={self._api_key}")
@@ -127,10 +127,17 @@ class Weather(Widget):
         desc = r['hourly'][hour]['weather'][0]['main']
         temperature = r['hourly'][hour]['temp']
 
-        return ('speech', f"The weather {when} {desc} with {temperature} degrees Celcius")
+        return [('speech', f"The weather {when} {desc} with {temperature} degrees Celcius")]
 
     def request_location(self, location: str):
-        return ("config", "weather", "city_name", location)
+        r = requests.get(
+                    f"{WEATHER_URL}weather?q={location}&appid={self._api_key}&units=metric")
+
+        r = json.loads(r.text)
+        text = f"The weather in {location} is {r['main']['temp']} degrees Celcius"
+
+        return [("config", "weather", "city_name", location),
+                ("speech", text)]
 
     def subscribe(self):
         return {

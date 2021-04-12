@@ -47,13 +47,14 @@ class Action:
             if resp['intent'] in self._commands:
                 res = self._commands[resp['intent']](**resp['args'])
                 if res is not None:
-                    if "config" in res:
-                        self._config_change(res[1:])
-                    elif "update" in res:
-                        print(res)
-                        self._update_commands()
-                    elif "speech" in res:
-                        self._s.speak_back(res[1])
+                    for act in res:
+                        if "config" in act:
+                            self._config_change(act[1:])
+                        elif "update" in act:
+                            print(res)
+                            self._update_commands()
+                        elif "speech" in act:
+                            self._s.speak_back(act[1])
             else:
                 print("Not available command")
         except Exception as e:
