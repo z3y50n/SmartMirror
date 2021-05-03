@@ -2,11 +2,10 @@ from configparser import ConfigParser
 import os
 import threading
 
-from modules import action, bot, speech 
+from modules import action, bot, speech
+from modules.basedir import BASEDIR
 
-CONFIG_PATH = os.path.join(os.path.abspath(os.path.join(
-    os.path.dirname(__file__), os.path.pardir)), "smartmirror.ini")
-
+CONFIG_PATH = os.path.join(BASEDIR, "smartmirror.ini")
 
 class Controller(threading.Thread):
     def __init__(self, gui):

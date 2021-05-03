@@ -13,11 +13,11 @@ from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.uix.settings import SettingsWithSidebar
 
 from modules.controller import Controller
+from modules.basedir import BASEDIR
 from mirror_settings import settings_json, default_json, WELCOME_MESSAGES, KIVY_FONTS
 
 
-WIDGET_PATH = os.path.join(os.path.dirname(
-    os.path.abspath(__file__)), 'widgets/')
+WIDGET_PATH = os.path.join(BASEDIR, "widgets/")
 
 WIDGETS = [] # Store all imported widgets
 

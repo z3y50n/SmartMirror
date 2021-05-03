@@ -4,10 +4,9 @@ import json
 
 from wit import Wit
 
+from modules.basedir import BASEDIR
 
-CONFIG_PATH = os.path.join(os.path.abspath(os.path.join(
-    os.path.dirname(__file__), os.path.pardir)), "smartmirror.ini")
-
+CONFIG_PATH = os.path.join(BASEDIR, "smartmirror.ini")
 
 class Bot():
     """A class for interacting with Wit.ai bot"""

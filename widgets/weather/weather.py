@@ -1,4 +1,3 @@
-from kivy.config import ConfigParser
 from datetime import datetime
 import json
 import os
@@ -6,15 +5,15 @@ import requests
 
 from kivy.base import runTouchApp
 from kivy.clock import Clock
+from kivy.config import ConfigParser
 from kivy.lang import Builder
 from kivy.properties import StringProperty, ConfigParserProperty
 from kivy.uix.widget import Widget
 
+from modules.basedir import BASEDIR
 
-CONFIG_PATH = os.path.join(os.path.abspath(os.path.join(
-    __file__, os.path.pardir, os.path.pardir, os.path.pardir)), "smartmirror.ini")
-CITIES_PATH = os.path.join(os.path.abspath(os.path.join(
-    __file__, os.path.pardir, os.path.pardir, os.path.pardir)), "assets", "city.list.json")
+CONFIG_PATH = os.path.join(BASEDIR, "smartmirror.ini")
+CITIES_PATH = os.path.join(BASEDIR, "assets", "city.list.json")
 
 WEATHER_URL = "https://api.openweathermap.org/data/2.5/"
 DATE_FORMAT = "%Y-%m-%d"
