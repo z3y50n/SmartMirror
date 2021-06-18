@@ -1,0 +1,130 @@
+#:kivy 2.0.0
+#:import fill textwrap.fill
+
+<KeypointEditForm>:
+    BoxLayout:
+        size: root.size
+        pos: root.pos
+        orientation: 'vertical'
+        size_hint: (0.3, 0.35)
+        pos_hint: {'x': 0.05, 'top': 0.8}
+        BoxLayout:
+            orientation: 'horizontal'
+            BoxLayout:
+                orientation: 'vertical'
+                Label:
+                    halign: 'center'
+                    valign: 'middle'
+                    markup: True
+                    text: '[i]' + fill(root.prev_kpnt, 10) + '[/i]'
+                    color: 1, 1, 1, 1
+                CustomButton:
+                    background_normal: './assets/left-arrow.png'
+                    background_down: './assets/left-arrow.png'
+                    border: 0, 0, 0, 0
+                    color: 0, 0, 0, 1
+                    on_release: root.cycle_prev()
+                    size_hint: 0.7, 0.7
+                    text: 'Previous'
+            Label:
+                halign: 'center'
+                valign: 'top'
+                markup: True
+                text: '[b]' + fill(root.name, 10) + '[/b]'
+            BoxLayout:
+                orientation: 'vertical'
+                Label:
+                    halign: 'center'
+                    valign: 'middle'
+                    markup: True
+                    text: '[i]' + fill(root.next_kpnt, 10) + '[/i]'
+                    color: 1, 1, 1, 1
+                CustomButton:
+                    background_normal: './assets/right-arrow.png'
+                    background_down: './assets/right-arrow.png'
+                    border: 0, 0, 0, 0
+                    color: 0, 0, 0, 1
+                    on_release: root.cycle_next()
+                    size_hint: 0.7, 0.7
+                    text: 'Next'
+        Widget:
+            id: separator
+            size_hint_y: None
+            height: 6
+            canvas:
+                Color:
+                    rgb: 0.45, 0.33, 0.41
+                Rectangle:
+                    pos: self.pos[0], separator.center_y
+                    size: separator.width, 2
+        GridLayout:
+            cols: 2
+            id: kpnt_settings_grid
+            spacing: '8dp'
+            padding: '8dp'
+            Label:
+                text: 'Option 1'
+            Label:
+                text: 'checkbox'
+            Label:
+                text: 'Option 2'
+            Label:
+                text: 'slider'
+
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint_y: 0.5
+            Button:
+                text: 'Cancel'
+                on_release: root.cancel()
+            Button:
+                text: 'Save Changes'
+                on_release: root.save_kpnt_options()
+
+<LoadDialog>:
+    BoxLayout:
+        size: root.size
+        pos: root.pos
+        orientation: 'vertical'
+        FileChooserListView:
+            id: filechooser
+            path: root.video_input_path
+
+        BoxLayout:
+            size_hint_y: 0.05
+            Button:
+                text: 'Cancel'
+                on_release: root.cancel()
+
+            Button:
+                text: 'Load'
+                on_release: root.save_from_video(filechooser.path, filechooser.selection)
+
+<EditorControls>:
+    orientation: 'horizontal'
+    name: 'editor_controls'
+    ExerciseSpinner:
+        id: choose_exercise_spin
+        values: root.exercises.keys()
+        on_text: root.start_playback(self.text)
+    PlayPauseButton:
+        id: play_pause_btn
+        on_state: root.on_play_pause(self.state)
+    Slider:
+        id: prog_slider
+        size_hint_x: 0.8
+        min: 0
+        max: 100
+        step: 1
+        value: root.frame_indx
+        value_track: True
+        value_track_color: 0.14, 0.41, 0.60, 1
+    MeshOptions:
+        set_smpl_mode: root.set_smpl_mode
+    CustomButton:
+        background_normal: './assets/file-save.png'
+        background_down: './assets/file-save.png'
+        border: 0, 0, 0, 0
+        size_hint: 0.3, 0.7
+        pos_hint: {'center_y': 0.5}
+        on_release: root.show_load_dialog()

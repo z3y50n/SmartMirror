@@ -1,3 +1,7 @@
-**/__pycache__/
-*smartmirror.ini
-*.swp
+__pycache__/
+/.vscode
+
+pretrained_models_data/
+exercise_data/
+docs/
+tests/

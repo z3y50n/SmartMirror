@@ -1,0 +1,46 @@
+#:kivy 2.0.0
+<ExercisorScreen>:
+    id: 'exercisor_screen'
+    name: 'exercise screen'
+    BoxLayout:
+        orientation: 'vertical'    
+        size: root.size
+        FloatLayout:
+            size_hint_y: 0.1
+            BoxLayout:
+                orientation: 'horizontal'
+                pos_hint: {'right': 1, 'top': 1}
+                size_hint_x: 0.2
+                spacing: 30
+                ColorAdjustToggle:
+                    on_state: root.toggle_color_adjust(self.state)
+                CustomToggle:
+                    id: ctrl_btn
+                    color: 0, 0, 0, 1
+                    markup: True
+                    border: 0, 0, 0, 0
+                    text: '[b][i]Editor[/i][/b]' if self.state == 'normal' else '[b][i]Play[/i][/b]'
+                    background_normal: './assets/right-arrow.png'
+                    background_down: './assets/left-arrow.png'
+                    on_state: root.change_control(self.state)
+        RelativeLayout:
+            id: renderer_layout
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint_y: 0.05
+            padding: 20, 2
+            Label:
+                id: info_label
+                color: 0.6, 0.6, 0.6, 1
+                text: ''
+                text_size: self.width, self.height
+            Label:
+                id: frame_lab
+                color: 0.6, 0.6, 0.6, 1
+                text: ''
+                text_size: self.width, self.height
+                halign: 'right'
+        RelativeLayout:
+            pos_hint: {'center_x': 0.5, 'bottom': 1}
+            id: controls_layout
+            size_hint: 1, 0.1
