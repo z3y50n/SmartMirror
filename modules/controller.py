@@ -2,10 +2,11 @@ from configparser import ConfigParser
 import os
 import threading
 
-from modules import action, bot, speech
+from modules import action, bot, speech, face_recognition
 from modules.basedir import BASEDIR
 
 CONFIG_PATH = os.path.join(BASEDIR, "smartmirror.ini")
+FACE_MODEL = os.path.join(BASEDIR, "assets", "facial_recognition_model.xml")
 
 class Controller(threading.Thread):
     def __init__(self, gui):
@@ -74,9 +75,4 @@ class Controller(threading.Thread):
                 self._action.perform(resp)
                 
             text = self._s.listen(self._gui.root.ids['status_label'])
-            
         self.run()
-
-
-if __name__ == "__main__":
-    interface = Controller()
