@@ -1,9 +1,10 @@
 from modules import speech
 
+
 class Action:
     _commands = {}
     _current_screen = None
-    
+
     def __init__(self, gui) -> None:
         self._gui = gui
         self._update_commands()
@@ -16,7 +17,7 @@ class Action:
 
         widgets = self._extract_widgets(self._current_screen)
         widgets.append(self._gui)
-        
+
         self._commands = self._extract_functions(widgets)
 
     def _get_screen(self, name):
@@ -44,8 +45,8 @@ class Action:
     def perform(self, resp):
         """Perform action as specified by wit bot"""
         try:
-            if resp['intent'] in self._commands:
-                res = self._commands[resp['intent']](**resp['args'])
+            if resp["intent"] in self._commands:
+                res = self._commands[resp["intent"]](**resp["args"])
                 if res is not None:
                     for act in res:
                         if "config" in act:
@@ -65,5 +66,3 @@ class Action:
         self._gui.config.set(*conf)
         self._gui.config.write()
         self._gui.on_config_change(self._gui.config, *conf)
-
-    

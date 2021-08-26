@@ -3,7 +3,7 @@ import os
 import cv2
 
 
-class FaceRecognition():
+class FaceRecognition:
     def __init__(self, model, control, active=True, camera=0):
         self._model = model
         self._active = active
@@ -19,13 +19,12 @@ class FaceRecognition():
             scaleFactor=1.1,
             minNeighbors=5,
             minSize=(30, 30),
-            flags=cv2.CASCADE_SCALE_IMAGE
+            flags=cv2.CASCADE_SCALE_IMAGE,
         )
 
         if len(faces) > 0:
             return True
         return False
-        
 
     def face_detect(self):
         ret, frame = self._video_capture.read()

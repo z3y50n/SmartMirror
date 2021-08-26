@@ -8,6 +8,7 @@ from modules.basedir import BASEDIR
 CONFIG_PATH = os.path.join(BASEDIR, "smartmirror.ini")
 FACE_MODEL = os.path.join(BASEDIR, "assets", "facial_recognition_model.xml")
 
+
 class Controller(threading.Thread):
     def __init__(self, gui):
         super(Controller, self).__init__()
@@ -54,25 +55,25 @@ class Controller(threading.Thread):
         self._command_mode()
 
     def _authenticate_mode(self):
-        text = self._s.listen(self._gui.root.ids['status_label'])
+        text = self._s.listen(self._gui.root.ids["status_label"])
         while not self._check_launch_phrase(text):
             self._check_close(text)
-            text = self._s.listen(self._gui.root.ids['status_label'])
+            text = self._s.listen(self._gui.root.ids["status_label"])
 
         print("You gained access")
         self._s.speak_back("How may I help you?")
 
     def _command_mode(self):
-        text = self._s.listen(self._gui.root.ids['status_label'])
+        text = self._s.listen(self._gui.root.ids["status_label"])
         while not self._check_close_phrase(text):
             self._running.wait()
-            
+
             self._check_close(text)
-            
+
             resp = self._bot.message(text)
             if resp:
                 print(resp)
                 self._action.perform(resp)
-                
-            text = self._s.listen(self._gui.root.ids['status_label'])
+
+            text = self._s.listen(self._gui.root.ids["status_label"])
         self.run()

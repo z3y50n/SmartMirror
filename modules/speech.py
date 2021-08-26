@@ -6,7 +6,7 @@ import os
 import speech_recognition as sr
 
 
-class Speech():
+class Speech:
     def __init__(self):
         self._r = sr.Recognizer()
         self._audio = None
@@ -40,8 +40,8 @@ class Speech():
         return self._text
 
     def speak_back(self, text):
-        tts = gTTS(text=text, lang='en')
+        tts = gTTS(text=text, lang="en")
         tts.save("temp.mp3")
-        speech = AudioSegment.from_mp3('temp.mp3')
+        speech = AudioSegment.from_mp3("temp.mp3")
         play(speech)
         os.remove("temp.mp3")

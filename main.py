@@ -19,11 +19,13 @@ from mirror_settings import settings_json, default_json, WELCOME_MESSAGES, KIVY_
 
 WIDGET_PATH = os.path.join(BASEDIR, "widgets/")
 
-WIDGETS = [] # Store all imported widgets
+WIDGETS = []  # Store all imported widgets
 
 # Import every module located in widget folder
 for widget in os.listdir(WIDGET_PATH):
-    if os.path.exists(os.path.join(WIDGET_PATH, widget, "__init__.py")) and os.path.exists(os.path.join(WIDGET_PATH, widget, f"{widget}.py")):
+    if os.path.exists(
+        os.path.join(WIDGET_PATH, widget, "__init__.py")
+    ) and os.path.exists(os.path.join(WIDGET_PATH, widget, f"{widget}.py")):
         WIDGETS.append(importlib.import_module(f"widgets.{widget}.{widget}"))
 
 for font in KIVY_FONTS:
@@ -68,9 +70,7 @@ class SmartMirrorApp(App):
         return MainPage()
 
     def subscribe(self):
-        return {
-            "change_screen": self.change_screen
-        }
+        return {"change_screen": self.change_screen}
 
     def change_screen(self, screen_name):
         if self.root.has_screen(screen_name):
@@ -97,21 +97,18 @@ class SmartMirrorApp(App):
         for widget in os.listdir(WIDGET_PATH):
             if os.path.exists(os.path.join(WIDGET_PATH, widget, "settings.json")):
                 with open(os.path.join(WIDGET_PATH, widget, "settings.json")) as f:
-                    default = json.load(f)['default_json']
+                    default = json.load(f)["default_json"]
                     config.setdefaults(widget, default)
 
     def build_settings(self, settings):
-        settings.add_json_panel("Main Settings",
-                                self.config,
-                                data=settings_json)
+        settings.add_json_panel("Main Settings", self.config, data=settings_json)
 
         # Create a panel for every widget that has settings.json file
         for widget in os.listdir(WIDGET_PATH):
             if os.path.exists(os.path.join(WIDGET_PATH, widget, "settings.json")):
                 with open(os.path.join(WIDGET_PATH, widget, "settings.json")) as f:
-                    temp_settings = json.dumps(json.load(f)['settings_json'])
-                    settings.add_json_panel(
-                        widget, self.config, data=temp_settings)
+                    temp_settings = json.dumps(json.load(f)["settings_json"])
+                    settings.add_json_panel(widget, self.config, data=temp_settings)
 
 
 if __name__ == "__main__":
