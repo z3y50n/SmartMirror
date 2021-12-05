@@ -24,20 +24,17 @@
     ExerciseSpinner:
         id: choose_exercise_spin
         values: root.exercises.keys()
-        on_text: root.start_playing(self.text)
+        on_text: root.start_exercise(self.text)
     PlayPauseButton:
         id: play_pause_btn
         on_release: root.on_play_pause(self.state)
     MeshOptions:
         set_smpl_mode: root.set_smpl_mode
-    Spinner:
-        id: demo_render_spin
-        text: 'Render'
-        values: 'monkey', 'monkey_no_norms', 'random', 'smpl'
-        size_hint_x: 0.3
-        on_text: root.demo_render(self.text)
+    # Spinner:
+    #     id: demo_render_spin
+    #     text: 'Render'
+    #     values: 'monkey', 'monkey_no_norms', 'random', 'smpl'
+    #     size_hint_x: 0.3
+    #     on_text: root.demo_render(self.text)
     Widget:
         size_hint_x: 0.8
-    # CustomButton:
-    #     text: 'Change mesh mode'
-    #     on_release: root.change_mesh_mode()

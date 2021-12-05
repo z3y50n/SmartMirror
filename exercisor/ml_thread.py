@@ -1,7 +1,7 @@
 from abc import ABC, abstractclassmethod
 import threading
 import time
-from log import logger
+from utils.log import logger
 
 
 class MLThread(ABC, threading.Thread):
@@ -59,13 +59,13 @@ class MLThread(ABC, threading.Thread):
 
         while(self._running.is_set()):
             self._resumed.wait()
-            self.start_time = time.time()
+            self._start_time = time.time()
             inputs = self._prepare_inputs()
             outputs = self._predict(inputs)
             self._process_outputs(outputs)
 
             # If processing finished fast, sleep to guarantee the target_fps
-            time.sleep(max(1./self.target_fps - (time.time() - self.start_time), 0))
+            time.sleep(max(1./self.target_fps - (time.time() - self._start_time), 0))
 
         self._cleaning_up()
         logger.info(f'{self.name} has finished execution')

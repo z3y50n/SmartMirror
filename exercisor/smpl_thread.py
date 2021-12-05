@@ -3,7 +3,7 @@ import tensorflow as tf
 
 from ml_thread import MLThread
 from tf_smpl.batch_smpl import SMPL
-from log import logger
+from utils.log import logger
 
 
 class SMPLThread(MLThread):
@@ -87,7 +87,7 @@ class SMPLThread(MLThread):
         """ Run the specified function with the outputs of the prediction and go to the next frame. """
         if not outputs:
             return
-        frame = {'index': self.frame_index, 'timestamp': self.start_time}
+        frame = {'index': self.frame_index, 'timestamp': self._start_time}
         self.output_fn(outputs['vertices'][0], outputs['keypoints'][0], frame)
         self.frame_index = (self.frame_index + 1) % len(self.exercise)
 
@@ -105,7 +105,6 @@ class SMPLThread(MLThread):
     @exercise.setter
     def exercise(self, ex):
         self._exercise = ex
-        self.frame_index = 0
 
     @property
     def frame_index(self):

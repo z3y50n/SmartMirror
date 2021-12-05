@@ -12,7 +12,7 @@ from kivy.graphics import RenderContext, Callback, PushMatrix, PopMatrix, \
     Translate, Rotate, Mesh, UpdateNormalMatrix, Scale
 
 from play.mesh_utils import ObjFile, GLMeshData
-from quaternion import quaternion_to_euler, euler_to_quaternion, quat_mult, euler_to_roll_pitch_yaw
+from utils.quaternion import quaternion_to_euler, euler_to_quaternion, quat_mult, euler_to_roll_pitch_yaw
 
 
 MESH_MODES = ('points', 'line_strip', 'line_loop', 'lines', 'triangles', 'triangle_strip', 'triangle_fan')
@@ -33,8 +33,8 @@ class Renderer(Widget):
             self.keypoints_spec = keypoints_spec.copy()
             self.keypoints_spec.sort(key=lambda kpnt: kpnt['smpl_indx'])
             # Extract the parent indices from the keypoints dictionary
-            self.parents = [next((indx for (indx, kpnt) in enumerate(keypoints_spec)
-                            if kpnt['name'] == p_kpnt['parent']), -1) for p_kpnt in keypoints_spec]
+            self.parents = [next((indx for (indx, kpnt) in enumerate(self.keypoints_spec)
+                            if kpnt['name'] == p_kpnt['parent']), -1) for p_kpnt in self.keypoints_spec]
 
         if obj_mesh_path is not None:
             self._monkey_scene = ObjFile(obj_mesh_path)
@@ -154,15 +154,21 @@ class Renderer(Widget):
         )
         self.rotx.angle += 180
 
-        # For debugging rotations
+        # For debugging rotations: x,y,z axis
         # Mesh(
-        #     vertices=[-1, 0, 0, -1, -1, -1, 0, 0, 0, 0, 0, -1, -1, -1, 0, 0],
+        #     vertices=[1, 0, 0, -1, -1, -1, 0, 0, 0, 0, 0, -1, -1, -1, 0, 0],
         #     indices=[0, 1],
         #     fmt=GLMeshData.vertex_format,
         #     mode='lines'
         # )
         # Mesh(
-        #     vertices=[0, -0.01, 0, -1, -1, -1, 0, 0, 1, -0.01, 0, -1, -1, -1, 0, 0],
+        #     vertices=[0, 1, 0, -1, -1, -1, 0, 0, 0, 0, 0, -1, -1, -1, 0, 0],
+        #     indices=[0, 1],
+        #     fmt=GLMeshData.vertex_format,
+        #     mode='lines'
+        # )
+        # Mesh(
+        #     vertices=[0, 0, 1, -1, -1, -1, 0, 0, 0, 0, 0, -1, -1, -1, 0, 0],
         #     indices=[0, 1],
         #     fmt=GLMeshData.vertex_format,
         #     mode='lines'
@@ -313,7 +319,7 @@ class Renderer(Widget):
             The SMPL index of the keypoint to highlight.
         """
         self._highlighted_kpnt_indx = kpnt_indx
-        self.canvas['sphere_color'] = (0.67, 0.96, 0.23)
+        self.canvas['sphere_color'] = (0.415, 0.878, 0.662)
         self._highlight_keypoint()
 
     def _highlight_keypoint(self):

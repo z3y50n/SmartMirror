@@ -1,8 +1,21 @@
 #:kivy 2.0.0
 
+<BackgroundColor@Widget>
+    background_color: 1, 1, 1, 1
+    canvas.before:
+        Color:
+            rgba: root.background_color
+        Rectangle:
+            size: self.size
+            pos: self.pos
+
+<BackgroundLabel@Label+BackgroundColor>
+    background_color: 0, 0, 0, 1
+
 <CustomButton@Button>:
     text_size: self.width, None
     halign: 'center'
+    valign: 'center'
     padding_x: '8dp'
 
 <CustomToggle@ToggleButton>:

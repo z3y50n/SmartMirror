@@ -1,12 +1,11 @@
 from controls import AbstractControls
-from log import logger
+from utils.log import logger
 
 
 class PlayControls(AbstractControls):
 
-    def __init__(self, actions, exercises, info_label, *args, **kwargs):
-        self.info_label = info_label
-        super().__init__(actions, exercises, *args, **kwargs)
+    def __init__(self, actions, info_label, *args, **kwargs):
+        super().__init__(actions, info_label, *args, **kwargs)
 
     def demo_render(self, rendered_obj):
         if rendered_obj == 'smpl':
@@ -18,13 +17,12 @@ class PlayControls(AbstractControls):
         if rendered_obj in self.ids.demo_render_spin.values:
             self.info_label.text = f'Rendering the object {rendered_obj}...'
 
-    def start_playing(self, exercise_name):
+    def start_exercise(self, exercise_name: str):
         if exercise_name in self.exercises.keys():
-            logger.info(f'Playing the exercise `{exercise_name}`...')
-            self.info_label.text = f'Playing the exercise {exercise_name}...'
+            super().start_exercise(exercise_name)
             self.actions['predict'].stop()
             self.actions['play'].initialize(self.smpl_mode, {'name': exercise_name}, self.exercises[exercise_name])
 
     def reset_ui(self):
-        self.ids.demo_render_spin.text = 'Render'
+        # self.ids.demo_render_spin.text = 'Render'
         super().reset_ui()

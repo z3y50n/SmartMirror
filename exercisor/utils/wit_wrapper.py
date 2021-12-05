@@ -18,9 +18,9 @@ class WitWrapper:
 
     def playback(self, exercise):
         if type(self.exercisor.controls) == self.exercisor.EditorControls:
-            self.exercisor.controls.start_playback(exercise)
+            self.exercisor.controls.start_exercise(exercise)
         elif type(self.exercisor.controls) == self.exercisor.PlayControls:
-            self.exercisor.controls.start_playing(exercise)
+            self.exercisor.controls.start_exercise(exercise)
 
     def control_playback(self, duration=5):
         if self.exercisor.actions['playback'].running:

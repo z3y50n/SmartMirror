@@ -30,7 +30,7 @@ class AbstractAction():
         self.controls = None
 
     def initialize(self, smpl_mode: Text):
-        """ Reset the action's state, initialize the renderer and resume the action.
+        """Reset the action's state, initialize the renderer and resume the action.
 
         Parameters
         ----------
@@ -105,8 +105,8 @@ class PlaybackAction(AbstractAction):
         The thread responsible for running the SMPL model and returning the output.
     keypoints_spec : `list` of `dict`
         The SMPL keypoints' specifications. The dictionaries contain the name and the parent of each keypoint.
-    exercise : `numpy.array`, (N x 85)
-        The SMPL's 85 thetas parameters of each of the N frames.
+    exercise : `numpy.array`, (N x 82)
+        The SMPL's 82 thetas parameters of each of the N frames.
     """
     def __init__(self, smpl_thread, renderer: Renderer, keypoints_spec: List[Dict], *args, **kwargs):
         self.smpl_thread = smpl_thread
@@ -114,25 +114,38 @@ class PlaybackAction(AbstractAction):
         self.renderer.single_click_handle = self.single_click_handle
         self.keypoints_spec = keypoints_spec
 
-    def initialize(self, smpl_mode: Text, exercise: np.array = None):
+    def initialize(self, smpl_mode: Text, exercise: np.ndarray = None):
         """ Set the SMPL thread's output function and the exercise data to use as input.
 
-       Extends the :method: `initialize` of the :class: `AbstractAction`.
+       Extends the :method:`initialize` of the :class:`AbstractAction`.
 
         Parameters
         ----------
-        exercise : `numpy.array`, (N x 85)
-            The SMPL's 85 thetas parameters of each of the N frames.
+        exercise : `numpy.array`, (N x 82)
+            The SMPL's 82 thetas parameters of each of the N frames.
         """
         super().initialize(smpl_mode)
 
         self.smpl_thread.output_fn = self.render_mesh
-        if exercise is not None:
-            self.exercise = exercise
-            self.smpl_thread.exercise = exercise
+        self.exercise = exercise
+        self.smpl_thread.frame_index = 0
+
+    @property
+    def exercise(self):
+        """The current playbacked exercise's thetas.
+        
+        When set, also sets the smpl thread's exercise.
+        """
+        return self._exercise
+
+    @exercise.setter
+    def exercise(self, new_exercise: np.ndarray):
+        if new_exercise is not None:
+            self._exercise = new_exercise
+            self.smpl_thread.exercise = new_exercise 
 
     @mainthread
-    def render_mesh(self, new_vertices: np.array = None, new_kpnts: np.array = None, frame: Dict = {}):
+    def render_mesh(self, new_vertices: np.ndarray = None, new_kpnts: np.array = None, frame: Dict = {}):
         """ Render the mesh and set the slider's frame index.
 
         Extends the :method: `render_mesh` of the :class: `AbstractAction`.
@@ -293,7 +306,7 @@ class PlayAction(AbstractAction):
         smpl_mode: `str` {'smpl_mesh', 'smpl_kpnts'}
             The display mode of the smpl playback.
         metadata: `dict`
-            Store metadata, like the name, regarding the current exercise.
+            Store metadata regarding the current exercise.
         thetas: `numpy.ndarray`, (N x 85)
             The 85 smpl parameters for each of the N frames of the exercise.
         """
@@ -306,6 +319,7 @@ class PlayAction(AbstractAction):
         if thetas is not None:
             self._thetas = thetas
             self.threads['smpl'].exercise = thetas
+            self.threads['smpl'].frame_index = 0
         # Prepare the HMR predictions
         self.threads['hmr'].capture = 'cam'
 
@@ -374,7 +388,11 @@ class PlayAction(AbstractAction):
 
     @mainthread
     def process_predictions(self, predicted_verts=None, predicted_kpnts=None):
-        correct_kpnts = self._kpnts_mat[self._corr_frm_indx, :, :]
+        try:
+            correct_kpnts = self._kpnts_mat[self._corr_frm_indx, :, :]
+        except IndexError:
+            return
+
         predicted_kpnts = self._smooth_kpnts(predicted_kpnts)
 
         self._kpnt_err_vecs[self._pred_frm_indx, :, :] = (correct_kpnts - predicted_kpnts)

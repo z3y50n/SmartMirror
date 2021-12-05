@@ -8,7 +8,7 @@ import tensorflow as tf
 
 from ml_thread import MLThread
 from hmr_model import HMR
-from preprocess import process_image
+from utils.preprocess import process_image
 
 
 class HMRThread(MLThread):
@@ -80,6 +80,7 @@ class HMRThread(MLThread):
         if ret:
             cv2.imshow('frame', frame)
             cv2.waitKey(1)
+
             frame, _ = process_image(frame, self.img_size)
         inputs = {'ret': ret, 'frame': frame}
         return inputs
@@ -108,8 +109,8 @@ class HMRThread(MLThread):
             return outputs
         else:
             if self._saving.is_set():
-                thetas = np.array(self.thetas)
                 self._saving.clear()
+                thetas = np.array(self.thetas)
                 self.thetas = []
                 self.pause()
                 return {'thetas': thetas}

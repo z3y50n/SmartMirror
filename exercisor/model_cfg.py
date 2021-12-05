@@ -5,6 +5,13 @@ pretrained_path = os.path.join(model_dir, 'model.ckpt-667589')
 smpl_model_path = os.path.join(model_dir, 'neutral_smpl_with_cocoplus_reg.pkl')
 smpl_faces_path = os.path.join(model_dir, 'smpl_faces.npy')
 
+model_type = 'resnet_fc3_dropout'
+data_format = 'NHWC'
+joint_type = 'cocoplus'
+batch_size = 1
+img_size = 224
+num_stage = 3
+
 keypoints_spec = [
     {'name': 'jaw', 'parent': 'neck', 'smpl_indx': 15, 'hradius': 0.10},
     {'name': 'neck', 'parent': 'upper chest', 'smpl_indx': 12, 'hradius': 0.10},
@@ -31,10 +38,3 @@ keypoints_spec = [
     {'name': 'right ankle', 'parent': 'right knee', 'smpl_indx': 8, 'hradius': 0.10},
     {'name': 'right toe', 'parent': 'right ankle', 'smpl_indx': 11, 'hradius': 0.10}
 ]
-
-model_type = 'resnet_fc3_dropout'
-data_format = 'NHWC'
-joint_type = 'cocoplus'
-batch_size = 1
-img_size = 224
-num_stage = 3

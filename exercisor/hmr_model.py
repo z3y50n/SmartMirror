@@ -6,7 +6,7 @@ from tensorflow.contrib.layers.python.layers.initializers import variance_scalin
 
 from tf_smpl import projection as proj_util
 from tf_smpl.batch_smpl import SMPL
-from log import logger
+from utils.log import logger
 
 
 def Encoder_resnet(x, is_training=True, weight_decay=0.001, reuse=False):
@@ -206,7 +206,7 @@ class HMR(object):
             self.all_joints.append(joints)
             # save each theta.
             self.final_thetas.append(theta_here)
-            # Finally)update to end iteration.
+            # Finally update to end iteration.
             theta_prev = theta_here
 
     def prepare(self):

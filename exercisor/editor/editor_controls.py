@@ -1,14 +1,15 @@
 import os
 
-from kivy.properties import ObjectProperty, ConfigParserProperty, NumericProperty, StringProperty, ListProperty
+from kivy.properties import ObjectProperty, ConfigParserProperty, NumericProperty
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.popup import Popup
 
 from controls import AbstractControls
+from editor.keypoint_editor import KeypointEditForm
 
 
 class LoadDialog(FloatLayout):
-    """A file chooser dialog.
+    """A video file chooser dialog.
 
     The user can select a video file which will be used for predicting the groundtruth exercise data.
 
@@ -26,72 +27,41 @@ class LoadDialog(FloatLayout):
     video_input_path = ConfigParserProperty('/home/ziposc/Videos', 'ExercisorEditor', 'video_input_path', 'Exercisor')
 
 
-class KeypointEditForm(FloatLayout):
-    """A form to edit the movement of a selected keypoint from the rendered mesh.
+class EditorControls(AbstractControls):
+    """The Editor screen control buttons.
+
+    The Editor buttons at the bottom center contain
+        - a button, for choosing a saved exercise.
+        - a play/pause button.
+        - a slider, displaying and controlling the current frame of the playbacked exercise.
+        - a toggle, choosing the display mode: mesh or keypoints.
+        - a button, for opening the `LoadDialog`.
+
+    Moreover, the Editor control buttons include the dialogs
+        - LoadDialog, to choose a video file and save the groundtruth exercise.
+        - KeypointEditForm, to edit the keypoints of the playbacked exercise.
 
     Attributes
     ----------
-    highlight_keypoint : `callable`
-        A function that highlights the currently selected keypoint.
-    name : `kivy.properties.StringProperty`
-        The name of the selected keypoint.
-    keypoints_spec : `kivy.properties.ListProperty`
-        A list of dictionaries containing the SMPL keypoints' specifications.
-    save_kpnt_options : `kivy.properties.ObjectProperty`
-        A function to save the editted options of the keypoint.
-    cancel : `kivy.properties.ObjectProperty`
-        A function to close the form.
-    prev_kpnt : `kivy.properties.StringProperty`
-        The name of the previous keypoint.
-    next_kpnt : `kivy.properties.StringProperty`
-        The name of the next keypoint.
+    frame_indx : `kivy.properties.NumericProperty`
+        The current frame of the playbacked exercise.
+    user_touching_slider : `bool`
+        Whether the user is currently touching the slider or not.
     """
-    name = StringProperty('Unknown', rebind=True)
-    keypoints_spec = ListProperty([])
-    save_kpnt_options = ObjectProperty(None)
-    cancel = ObjectProperty(None)
-    prev_kpnt = StringProperty('', rebind=True)
-    next_kpnt = StringProperty('', rebind=True)
-
-    def __init__(self, setup_highlight, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.setup_highlight = setup_highlight
-        self.kpnt_indx = next(i for i, kpnt in enumerate(self.keypoints_spec) if kpnt['name'] == self.name)
-
-    def cycle_prev(self):
-        self.kpnt_indx = (self.kpnt_indx - 1) % len(self.keypoints_spec)
-
-    def cycle_next(self):
-        self.kpnt_indx = (self.kpnt_indx + 1) % len(self.keypoints_spec)
-
-    @property
-    def kpnt_indx(self):
-        """ The index of the keypoint currently being edited.
-
-        When set, the previous and the next keypoints are updated as well as the name of the current.
-        """
-        return self._kpnt_indx
-
-    @kpnt_indx.setter
-    def kpnt_indx(self, new_indx):
-        self._kpnt_indx = new_indx
-        self.prev_kpnt = self.keypoints_spec[(self._kpnt_indx - 1) % len(self.keypoints_spec)]['name']
-        self.next_kpnt = self.keypoints_spec[(self._kpnt_indx + 1) % len(self.keypoints_spec)]['name']
-
-        self.name = self.keypoints_spec[self._kpnt_indx]['name'].title()
-        self.setup_highlight(self.keypoints_spec[self._kpnt_indx]['smpl_indx'])
-
-
-class EditorControls(AbstractControls):
 
     frame_indx = NumericProperty(0)
 
-    def __init__(self, edit_actions, exercises, info_label, *args, **kwargs):
-        self.info_label = info_label
-        super().__init__(edit_actions, exercises, *args, **kwargs)
+    def __init__(self, edit_actions, info_label, *args, **kwargs):
+        super().__init__(edit_actions, info_label, *args, **kwargs)
 
         self.user_touching_slider = False
         self.ids.prog_slider.bind(value=self.on_slider_value)
+
+    def on_frame_indx(self, instance, value):
+        try:
+            self.kpnt_edit_form.frame_indx = int(value)
+        except AttributeError:
+            pass
 
     def on_slider_value(self, instance, value):
         """ Binding when the user is using the slider to set the time point of the exercise. """
@@ -109,7 +79,7 @@ class EditorControls(AbstractControls):
         self._popup.dismiss()
 
     def predict_from_video(self, path, filename):
-        """ Start the `predict` action to save the results of an exercise video as groundtruth correct. """
+        """ Start the `predict` action to save the results of an exercise video as groundtruth exercise. """
         self.dismiss_popup()
         if type(filename) == int:
             files = sorted(os.listdir(path))
@@ -121,30 +91,46 @@ class EditorControls(AbstractControls):
         self.actions['predict'].initialize(self.smpl_mode, source=source, save_exercise=True)
         self.frame_indx = 0
 
-    def start_playback(self, exercise):
-        """ Start the `playback` action to playback a saved exercise. """
-        if exercise in self.exercises.keys():
-            self.info_label.text = f'Exercise playback: {exercise}'
-            self.ids.prog_slider.max = len(self.exercises[exercise]) - 1
+    def start_exercise(self, exercise_name: str):
+        """ Start the `playback` action to playback a saved exercise.
+        
+        Parameters
+        ----------
+        exercise : `str`
+            The name of the exercise to be played.
+        """
+        if exercise_name in self.exercises.keys():
+            super().start_exercise(exercise_name)
+            self.ids.prog_slider.max = len(self.exercises[exercise_name]) - 1
             self.actions['predict'].stop()
-            self.actions['playback'].initialize(self.smpl_mode, self.exercises[exercise])
+            self.actions['playback'].initialize(self.smpl_mode, self.exercises[exercise_name])
+
+    def update(self, exercise_controller):
+        super().update(exercise_controller)
+        if self.actions['playback'].running:
+            self.actions['playback'].exercise = self.exercises[exercise_controller.current_exercise]
 
     def display_kpnt_edit_form(self, kpnt_name: str, keypoints_spec):
         """ Display a popup with the keypoint edit dialog. """
-        self.dismiss_kpnt_edit_form()
-
-        self.kpnt_edit_form = KeypointEditForm(name=kpnt_name, keypoints_spec=keypoints_spec,
-                                               setup_highlight=self.actions['playback'].renderer.setup_highlight,
-                                               save_kpnt_options=self.save_kpnt_options,
-                                               cancel=self.dismiss_kpnt_edit_form)
-        self.parent.parent.parent.add_widget(self.kpnt_edit_form)
+        try:
+            self.kpnt_edit_form.set_curr_keypoint(kpnt_name)
+        except AttributeError:
+            self.kpnt_edit_form = KeypointEditForm(keypoints_spec=keypoints_spec, curr_kpnt=kpnt_name,
+                                                   setup_highlight=self.actions['playback'].renderer.setup_highlight,
+                                                   frame_indx=self.frame_indx,
+                                                   exercise_controller=self.exercise_controller,
+                                                   save_kpnt_options=self.save_kpnt_options,
+                                                   cancel_form=self.dismiss_kpnt_edit_form)
+            self.parent.parent.parent.add_widget(self.kpnt_edit_form)
 
     def save_kpnt_options(self):
+        # TODO: save rules
         self.dismiss_kpnt_edit_form()
 
     def dismiss_kpnt_edit_form(self):
         try:
             self.parent.parent.parent.remove_widget(self.kpnt_edit_form)
+            del(self.kpnt_edit_form)
         except AttributeError:
             pass
         self.actions['playback'].renderer.reset_highlight()
