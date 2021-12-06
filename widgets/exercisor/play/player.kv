@@ -1,0 +1,40 @@
+#:kivy 2.0.0
+
+<ProgressCounter>:
+    size_hint: 0.2, 0.2
+    pos_hint: {'center_x': 0.25, 'top': 0.97}
+    BoxLayout:
+        orientation: 'vertical'
+        pos: root.pos
+        size: root.size
+        Label:
+            id: prog_desc
+            text: root.mode.capitalize()
+            font_size: '15sp'
+        CircularProgressBar:
+            id: progress
+            mode: root.mode
+            size_hint_x: 0.5
+            pos_hint: {'center_x': 0.5}
+            min: 1
+            max: root.max_count
+
+<PlayControls>:
+    orientation: 'horizontal'
+    ExerciseSpinner:
+        id: choose_exercise_spin
+        values: root.exercises.keys()
+        on_text: root.start_exercise(self.text)
+    PlayPauseButton:
+        id: play_pause_btn
+        on_release: root.on_play_pause(self.state)
+    MeshOptions:
+        set_smpl_mode: root.set_smpl_mode
+    # Spinner:
+    #     id: demo_render_spin
+    #     text: 'Render'
+    #     values: 'monkey', 'monkey_no_norms', 'random', 'smpl'
+    #     size_hint_x: 0.3
+    #     on_text: root.demo_render(self.text)
+    Widget:
+        size_hint_x: 0.8

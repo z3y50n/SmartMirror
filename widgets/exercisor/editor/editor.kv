@@ -1,0 +1,226 @@
+#:kivy 2.0.0
+#:import fill textwrap.fill
+
+<BackgroundBoxLayout@BoxLayout+BackgroundColor>
+    background_color: 0, 0, 0, 1
+
+<BackgroundCheckBox@CheckBox+BackgroundColor>
+    background_color: 0, 0, 0, 1
+    color: .294, .761, .623
+
+<RotTextInput>
+    background_color: 0.11, 0.12, 0.15, 1
+    cursor_color: 1, 1, 1, 1
+    foreground_color: 0.415, 0.878, 0.662, 1
+    halign: 'center'
+    multiline: False
+    padding_vertical: [self.height / 2.0 - (self.line_height / 2.0) * len(self._lines), 0]
+    write_tab: False
+
+<RotInputForm>
+    orientation: 'horizontal'
+    canvas.before:
+        Color:
+            rgba: 0.11, 0.12, 0.15, 1
+        Rectangle:
+            size: self.size
+            pos: self.pos
+    RotTextInput:
+        text: root.text
+        hint_text: root.hint_text
+    CheckBox:
+        active: True
+        size_hint_x: 0.3
+        group: root.group
+        type: root.type
+        border: 0, 0, 0, 0
+        background_radio_normal: './assets/cancel.png'
+        background_radio_down: './assets/cancel.png'
+        on_active: root.cancel(self)
+
+<KeypointEditForm>:
+    size_hint: (0.3, 0.35)
+    pos: (self.width / 5, app.root_window.height / 2)
+    BoxLayout:
+        size: root.size
+        pos: root.pos
+        orientation: 'vertical'
+        spacing: '4dp'
+        BoxLayout:
+            orientation: 'horizontal'
+            BoxLayout:
+                orientation: 'vertical'
+                Label:
+                    halign: 'center'
+                    valign: 'middle'
+                    markup: True
+                    text: '[i]' + fill(root.prev_kpnt, 10) + '[/i]'
+                    color: 1, 1, 1, 1
+                CustomButton:
+                    background_normal: './assets/left-arrow.png'
+                    background_down: './assets/left-arrow.png'
+                    border: 0, 0, 0, 0
+                    color: 0, 0, 0, 1
+                    on_release: root.cycle_prev()
+                    size_hint: 0.7, 0.7
+                    text: 'Previous'
+            Label:
+                halign: 'center'
+                valign: 'top'
+                markup: True
+                text: '[b]' + fill(root.curr_kpnt, 10) + '[/b]'
+            BoxLayout:
+                orientation: 'vertical'
+                Label:
+                    halign: 'center'
+                    valign: 'middle'
+                    markup: True
+                    text: '[i]' + fill(root.next_kpnt, 10) + '[/i]'
+                    color: 1, 1, 1, 1
+                CustomButton:
+                    background_normal: './assets/right-arrow.png'
+                    background_down: './assets/right-arrow.png'
+                    border: 0, 0, 0, 0
+                    color: 0, 0, 0, 1
+                    on_release: root.cycle_next()
+                    size_hint: 0.7, 0.7
+                    text: 'Next'
+        Widget:
+            id: top_separator
+            size_hint_y: None
+            height: 6
+            canvas:
+                Color:
+                    rgb: 0.898, 0.972, 0.866
+                Rectangle:
+                    pos: self.pos[0], top_separator.center_y
+                    size: top_separator.width, 2
+        BackgroundBoxLayout:
+            orientation: 'vertical'
+            spacing: '1dp'
+            background_color: 0.898, 0.972, 0.866, 1
+            BoxLayout:
+                orientation: 'horizontal'
+                BackgroundLabel:
+                    text: 'Axis'
+                    size_hint_x: 0.7 
+                BackgroundLabel:
+                    text: 'x'
+                BackgroundLabel:
+                    text: 'y'
+                BackgroundLabel:
+                    text: 'z'
+            BoxLayout:
+                orientation: 'horizontal'
+                BackgroundLabel:
+                    text: 'Rotation'
+                    size_hint_x: 0.6
+                BackgroundLabel:
+                    text: str(root.rotation[0])
+                BackgroundLabel:
+                    text: str(root.rotation[1])
+                BackgroundLabel:
+                    text: str(root.rotation[2])
+            BoxLayout:
+                orientation: 'horizontal'
+                id: fixed_layout
+                BackgroundLabel:
+                    text: 'Fixed'
+                    size_hint_x: 0.6
+                BackgroundCheckBox:
+                    group: '0'
+                    type: 'fixed'
+                    on_active: root.on_checkbox_active(self)
+                BackgroundCheckBox:
+                    group: '1'
+                    type: 'fixed'
+                    on_active: root.on_checkbox_active(self)
+                BackgroundCheckBox:
+                    group: '2'
+                    type: 'fixed'
+                    on_active: root.on_checkbox_active(self)
+            BoxLayout:
+                orientation: 'horizontal'
+                id: range_layout
+                BackgroundLabel:
+                    text: 'Range'
+                    size_hint_x: 0.6
+                BackgroundCheckBox:
+                    group: '0'
+                    type: 'range'
+                    on_active: root.on_checkbox_active(self)
+                BackgroundCheckBox:
+                    group: '1'
+                    type: 'range'
+                    on_active: root.on_checkbox_active(self)
+                BackgroundCheckBox:
+                    group: '2'
+                    type: 'range'
+                    on_active: root.on_checkbox_active(self)
+        Widget:
+            id: bottom_separator
+            size_hint_y: None
+            height: 6
+            canvas:
+                Color:
+                    rgb: 0.898, 0.972, 0.866
+                Rectangle:
+                    pos: self.pos[0], bottom_separator.center_y
+                    size: bottom_separator.width, 2
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint_y: 0.5
+            Button:
+                text: 'Cancel'
+                on_release: root.cancel_form()
+            Button:
+                text: 'Save Changes'
+                on_release: root.save_kpnt_options()
+
+<LoadDialog>:
+    BoxLayout:
+        size: root.size
+        pos: root.pos
+        orientation: 'vertical'
+        FileChooserListView:
+            id: filechooser
+            path: root.video_input_path
+
+        BoxLayout:
+            size_hint_y: 0.05
+            Button:
+                text: 'Cancel'
+                on_release: root.cancel()
+
+            Button:
+                text: 'Load'
+                on_release: root.save_from_video(filechooser.path, filechooser.selection)
+
+<EditorControls>:
+    orientation: 'horizontal'
+    name: 'editor_controls'
+    ExerciseSpinner:
+        id: choose_exercise_spin
+        values: root.exercises.keys()
+        on_text: root.start_exercise(self.text)
+    PlayPauseButton:
+        id: play_pause_btn
+        on_state: root.on_play_pause(self.state)
+    Slider:
+        id: prog_slider
+        size_hint_x: 0.8
+        min: 0
+        max: 100
+        step: 1
+        value: root.frame_indx
+        value_track: True
+        value_track_color: 0.14, 0.41, 0.60, 1
+    MeshOptions:
+        set_smpl_mode: root.set_smpl_mode
+    CustomButton:
+        background_normal: './assets/file-save.png'
+        background_down: './assets/file-save.png'
+        border: 0, 0, 0, 0
+        size_hint: 0.3, 0.7
+        pos_hint: {'center_y': 0.5}
+        on_release: root.show_load_dialog()

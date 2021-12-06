@@ -40,6 +40,7 @@ class MainPage(ScreenManager):
         self._welcome = random.choice(WELCOME_MESSAGES)
         self.installer()
         print(self.children)
+        # self.current = "exercise screen"
 
     def add_widget(self, screen):
         """Overload add_widget function for extra security"""

@@ -1,0 +1,125 @@
+#:kivy 2.0.0
+
+<BackgroundColor@Widget>
+    background_color: 1, 1, 1, 1
+    canvas.before:
+        Color:
+            rgba: root.background_color
+        Rectangle:
+            size: self.size
+            pos: self.pos
+
+<BackgroundLabel@Label+BackgroundColor>
+    background_color: 0, 0, 0, 1
+
+<CustomButton@Button>:
+    text_size: self.width, None
+    halign: 'center'
+    valign: 'center'
+    padding_x: '8dp'
+
+<CustomToggle@ToggleButton>:
+    text_size: self.width, None
+    halign: 'center'
+    valign: 'center'
+    padding_x: '8dp'
+
+<ColorComponent@BoxLayout>:
+    orientation: 'vertical'
+    color_text: ''
+    color_val: color_slider.value / 255
+    Label:
+        text: root.color_text
+        pos_hint: {'top': 1}
+        size_hint_y: 0.5
+    Slider:
+        orientation: 'vertical'
+        id: color_slider
+        min: 0
+        max: 255
+        step: 1
+        value: 255
+    Label:
+        text: str(color_slider.value)
+        size_hint_y: 0.5
+
+<ColorControl@BoxLayout>:
+    orientation: 'vertical'
+    rgb: (red_ctrl.color_val, green_ctrl.color_val, blue_ctrl.color_val)
+    title: ''
+    Label:
+        text: root.title
+        size_hint_y: 0.2
+        bold: True
+        font_size: 17
+        color: root.rgb
+    BoxLayout:
+        orientation: 'horizontal'
+        ColorComponent:
+            id: red_ctrl
+            color_text: 'Red'
+        ColorComponent:
+            id: green_ctrl
+            color_text: 'Green'
+        ColorComponent:
+            id: blue_ctrl
+            color_text: 'Blue'
+
+<ColorAdjustDialog>:
+    orientation: 'vertical'
+    id: color_adjust
+    pos_hint: {'right': 1, 'top': 1}
+    size_hint: (0.35, 0.9)
+    object_color: obj_color.rgb
+    diffuse_light_color: diff_light_color.rgb
+    BoxLayout:
+        orientation: 'vertical'
+        size: root.size
+        pos: root.pos
+        ColorControl:
+            id: obj_color
+            title: 'Object Color'
+        ColorControl:
+            id: diff_light_color
+            title: 'Diffuse Lighting Color'
+
+<ColorAdjustToggle@CustomToggle>:
+    size_hint_y: 0.8
+    pos_hint: {'center_y': 0.5}
+    background_normal: './assets/color-adjustments.png'
+    background_down: './assets/color-adjustments.png'
+    border: 0, 0, 0, 0
+
+<ExerciseSpinner@Spinner>:
+    size_hint: 0.3, 0.7 
+    pos_hint: {'center_y': 0.5}
+    background_normal: './assets/list.png'
+    background_down: './assets/list.png'
+    border: 0, 0, 0, 0
+
+<PlayPauseButton@CustomToggle>:
+    size_hint: 0.3, 0.7
+    pos_hint: {'center_y': 0.5}
+    border: 0, 0, 0, 0
+    background_normal: './assets/play.png'
+    background_down: './assets/pause.png'
+
+<MeshOptions@GridLayout>:
+    rows: 2
+    cols: 2
+    size_hint_x: 0.5
+    Label:
+        text: 'Mesh'
+    Label:
+        text: 'Keypoints'
+    CheckBox:
+        value: 'mesh'
+        group: 'smpl_mode'
+        state: 'down'
+        allow_no_selection: False
+        on_state: root.set_smpl_mode(self.value, self.active)
+    CheckBox:
+        value: 'kpnts'
+        group: 'smpl_mode'
+        allow_no_selection: False
+        on_state: root.set_smpl_mode(self.value, self.active)

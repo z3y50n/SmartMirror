@@ -7,3 +7,7 @@ gTTS==2.2.2
 pydub==0.24.1
 black==21.7b0
 pre-commit==2.14.0
+tensorflow-cpu==1.15.0
+scipy
+chumpy
+opencv-python
