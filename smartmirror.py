@@ -60,9 +60,10 @@ class MainPage(ScreenManager):
 class SmartMirrorApp(App):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self.controller = None
 
     def on_start(self):
-        controller = Controller(self)
+        self.controller = Controller(self)
 
     def build(self, **kwargs):
         for kv in os.listdir(WIDGET_PATH):
