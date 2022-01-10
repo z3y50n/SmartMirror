@@ -12,11 +12,11 @@ FACE_MODEL = os.path.join(BASEDIR, "assets", "facial_recognition_model.xml")
 class Controller(threading.Thread):
     def __init__(self, gui):
         super(Controller, self).__init__()
-        config = ConfigParser()
-        config.read(CONFIG_PATH)
+        self.config = ConfigParser()
+        self.config.read(CONFIG_PATH)
 
-        self._launch_phrase = config["Speech"]["launch_phrase"]
-        self._close_phrase = config["Speech"]["close_phrase"]
+        self._launch_phrase = self.config["Speech"]["launch_phrase"]
+        self._close_phrase = self.config["Speech"]["close_phrase"]
         self._s = speech.Speech()
         self._gui = gui
         self._widgets = {id: widget for id, widget in self._gui.root.ids.items()}
