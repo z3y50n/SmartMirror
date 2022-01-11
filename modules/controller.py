@@ -17,8 +17,8 @@ class Controller(threading.Thread):
 
         self._launch_phrase = self.config["Speech"]["launch_phrase"]
         self._close_phrase = self.config["Speech"]["close_phrase"]
-        self._s = speech.Speech()
         self._gui = gui
+        self._s = speech.Speech(self._gui.root.ids["status_label"])
         self._widgets = {id: widget for id, widget in self._gui.root.ids.items()}
 
         self._bot = bot.Bot()
@@ -55,25 +55,26 @@ class Controller(threading.Thread):
         self._command_mode()
 
     def _authenticate_mode(self):
-        text = self._s.listen(self._gui.root.ids["status_label"])
+        text = self._s.listen()
         while not self._check_launch_phrase(text):
             self._check_close(text)
-            text = self._s.listen(self._gui.root.ids["status_label"])
+            text = self._s.listen()
 
         print("You gained access")
         self._s.speak_back("How may I help you?")
 
     def _command_mode(self):
-        text = self._s.listen(self._gui.root.ids["status_label"])
+        text = self._s.listen()
         while not self._check_close_phrase(text):
             self._running.wait()
 
             self._check_close(text)
 
             resp = self._bot.message(text)
+            print(resp)
             if resp:
                 print(resp)
                 self._action.perform(resp)
 
-            text = self._s.listen(self._gui.root.ids["status_label"])
+            text = self._s.listen()
         self.run()

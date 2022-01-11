@@ -7,24 +7,25 @@ import speech_recognition as sr
 
 
 class Speech:
-    def __init__(self):
+    def __init__(self, label=None):
         self._r = sr.Recognizer()
         self._audio = None
         self._text = ""
+        self._label = label
 
     def get_text(self):
         return self._text
 
-    def _listen_for_audio(self, label=None):
+    def _listen_for_audio(self):
         m = sr.Microphone()
         with m as source:
             self._r.adjust_for_ambient_noise(source, duration=1)
-            if label:
-                label.text = "Listening..."
+            if self._label:
+                self._label.text = "Listening..."
             print("Listening...")
             self._audio = self._r.listen(source, phrase_time_limit=5)
-            if label:
-                label.text = ""
+            if self._label:
+                self._label.text = ""
 
     def _speech_to_text(self):
         try:
@@ -33,8 +34,8 @@ class Speech:
             self._text = ""
             print("I could not understand you")
 
-    def listen(self, label=None):
-        self._listen_for_audio(label)
+    def listen(self):
+        self._listen_for_audio()
         self._speech_to_text()
         print(self._text)
         return self._text
