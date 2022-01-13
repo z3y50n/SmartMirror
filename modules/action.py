@@ -15,10 +15,10 @@ class Action:
         self._commands = {}
         self._current_screen = self._get_screen(self._gui.root.current)
 
-        widgets = self._extract_widgets(self._current_screen)
-        widgets.append(self._gui)
+        self.widgets = self._extract_widgets(self._current_screen)
+        self.widgets.append(self._gui)
 
-        self._commands = self._extract_functions(widgets)
+        self._commands = self._extract_functions()
 
     def _get_screen(self, name):
         """Get actuall screen object from a given name"""
@@ -34,10 +34,10 @@ class Action:
         widgets = [widget for widget in screen.walk() if hasattr(widget, "subscribe")]
         return widgets
 
-    def _extract_functions(self, widgets: list = []):
+    def _extract_functions(self):
         """Extract subscribed functions from a list of widgets"""
         functions = {}
-        for widget in widgets:
+        for widget in self.widgets:
             if hasattr(widget, "subscribe"):
                 functions.update(widget.subscribe())
         return functions
