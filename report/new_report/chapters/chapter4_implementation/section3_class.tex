@@ -20,8 +20,8 @@
 \end{figure}
 \noindent\textbf{Περιγραφή Κλάσης}
 
-Η κλάση αυτή κληρονομεί από την κλάση \href{https://kivy.org/doc/stable/api-kivy.app.html\#kivy.app.App}{\texttt{kivy.app.App}} η οποία είναι η βασική κλάση για την δημιουργία μιας Kivy εφαρμογής. Μέσως αυτής της κλάσης ελέγχουμε την γραφική εφαρμογή και όταν όλα είναι έτοιμα ξεκινάμε τον κύκλο ζωής της εφαρμογής καλώντας την μέθοδο \texttt{SmartMirrorApp().run()}.
-
+Η κλάση αυτή κληρονομεί από την κλάση kivy.app.App\footnote{\href{https://kivy.org/doc/stable/api-kivy.app.html\#kivy.app.App}{https://kivy.org/doc/stable/api-kivy.app.html\#kivy.app.App}} η οποία είναι η βασική κλάση για την δημιουργία μιας Kivy εφαρμογής. Μέσως αυτής της κλάσης ελέγχουμε την γραφική εφαρμογή και όταν όλα είναι έτοιμα ξεκινάμε τον κύκλο ζωής της εφαρμογής καλώντας την μέθοδο \texttt{SmartMirrorApp().run()}.
+\newpage
 \noindent\textbf{Χαρακτηριστικά Κλάσης}
 \begin{itemize}
     \item \texttt{controller}: Αντικείμενο τύπου Controller για την ενεργοποίηση του thread ελέγχου.
@@ -62,7 +62,7 @@
 
 \noindent\textbf{Περιγραφή Κλάσης}
 
-Η κλάση αυτή κληρονομεί από την κλάση \href{https://kivy.org/doc/stable/api-kivy.uix.screenmanager.html\#kivy.uix.screenmanager.ScreenManager}{ScreenManager} που περιέχεται στο πακέτο \texttt{kivy.uix.screenmanager}. Η κλάση αυτή είναι το πρωτεύον Widget που επιστρέφει η εφαρμογή και κάτω από αυτήν μπαίνουν όλες οι εφαρμογές που εγκαθιστά ο χρήστης (σαν καινούργια Screens).
+Η κλάση αυτή κληρονομεί από την κλάση ScreenManager\footnote{ \href{https://kivy.org/doc/stable/api-kivy.uix.screenmanager.html\#kivy.uix.screenmanager.ScreenManager}{https://kivy.org/doc/stable/api-kivy.uix.screenmanager.html\#kivy.uix.screenmanager.ScreenManager}} που περιέχεται στο πακέτο \texttt{kivy.uix.screenmanager}. Η κλάση αυτή είναι το πρωτεύον Widget που επιστρέφει η εφαρμογή και κάτω από αυτήν μπαίνουν όλες οι εφαρμογές που εγκαθιστά ο χρήστης (σαν καινούργια Screens).
 
 \noindent\textbf{Χαρακτηριστικά Κλάσης}
 \begin{itemize}
@@ -87,7 +87,7 @@
 \end{figure}
 \noindent\textbf{Περιγραφή Κλάσης}
 
-Η κλάση αυτή κληρονομεί από την κλάση \href{https://docs.python.org/3/library/threading.html\#threading.Thread}{threading.Thread}. O controller είναι ένα ανεξάρτητο thread από το main thread στο οποίο τρέχει η γραφική εφαρμογή και είναι υπεύθυνος για τον έλεγχο των λειτουργιών του συστήματος. Μέσα από αυτήν την κλάση ελέγχεται η ροή του προγράμματος, επιλέγονται οι ενέργειες που θα εκτελέσει ο καθρέφτης και ανανεώνεται το γραφικό περιβάλλον με βάση τις εντολές του χρήστη.
+Η κλάση αυτή κληρονομεί από την κλάση threading.Thread\footnote{\href{https://docs.python.org/3/library/threading.html\#threading.Thread}{https://docs.python.org/3/library/threading.html\#threading.Thread}}. O controller είναι ένα ανεξάρτητο thread από το main thread στο οποίο τρέχει η γραφική εφαρμογή και είναι υπεύθυνος για τον έλεγχο των λειτουργιών του συστήματος. Μέσα από αυτήν την κλάση ελέγχεται η ροή του προγράμματος, επιλέγονται οι ενέργειες που θα εκτελέσει ο καθρέφτης και ανανεώνεται το γραφικό περιβάλλον με βάση τις εντολές του χρήστη.
 
 \noindent\textbf{Χαρακτηριστικά Κλάσης}
 \begin{itemize}
@@ -194,5 +194,35 @@
     \item \texttt{\_extract\_widgets(screen: kivy.uix.screenmanager.Screen)}: Βοηθητική συνάρτηση η οποία δέχεται ένα αντικείμενο τύπου \texttt{Screen} και επιστρέφει μια λίστα με όλα τα Widgets που βρίσκονται στην οθόνη και διαθέτουν συνάρτηση subscribe.
     \item \texttt{\_extract\_functions()}: Βοηθητική συνάρτηση που ελέγχει όλα τα διαθέσιμα widgets και διαβάζει τις εντολές που εκθέτουν μέσω της συνάρτησης subscribe. Οι εντολές έχουν ως κλειδί την πρόθεση που θα έχει η εντολή και το αντικείμενο της συνάρτησης που θα κληθεί ως τιμή.
     \item \texttt{perform(resp: dict)}: Συνάρτηση που δέχεται ως είσοδο ένα dictionary με την πρόθεση και τα ορίσματα από το Wit και εκτελεί την εντολή. Η πρόθεση ελέγχεται αν βρίσκεται στα κλειδιά της μεταβλητής \_commands και εκτελεί την συνάρτηση στην οποία δείχνει το συγκεκριμένο κλειδί. Εαν η συνάρτηση επιστρέφει μία από τις τιμές "config", "update" ή "speech" τότε ο καθρέφτης ανανεώνει τις ρυθμίσεις ή ανανεώνει τις διαθέσιμες εντολές (συνήθως όταν γίνεται αλλαγή οθόνης) ή ο καθρέφτης μιλάει στον χρήστη.
-    \item \texttt{\_config\_change(conf: list)}:
+    \item \texttt{\_config\_change(conf: list)}: Βοηθητική συνάρτηση η οποία καλείται όταν κάποια εντολή του χρήστη θα αλλάξει τις ρυθμίσεις του καθρέφτη. Δέχεται μια ως είσοδο μια λίστα η οποία καθορίζει τις νέες ρυθμίσεις.
+\end{itemize}
+
+\subsection{MirrorClock}
+\begin{figure}[h]
+	\centering
+	\includegraphics[scale=0.7]{images/chapter4/uml_diagrams/MirrorClock.png}
+	\caption{UML της κλάσης MirrorClock}
+	\label{fig:mirrorclock}
+\end{figure}
+\noindent\textbf{Περιγραφή Κλάσης}
+
+Η κλάση αυτή κληρονομεί από την κλάση Widget \footnote{\href{https://kivy.org/doc/stable/api-kivy.uix.widget.html}{https://kivy.org/doc/stable/api-kivy.uix.widget.html}} που περιέχεται στο πακέτο \texttt{kivy.uix.widget} και υλοποιεί ένα ρολόι και ημερολόγιο στην αρχική οθόνη του καθρέφτη. Στο Σχήμα \ref{fig:clock_widget} φαίνεται γραφικά το συγκεκριμένο Widget.
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[scale=0.7]{images/chapter4/clock_widget.png}
+	\caption{Γραφική αναπαράσταση του Widget MirrorClock}
+	\label{fig:clock_widget}
+\end{figure}
+
+\noindent\textbf{Χαρακτηριστικά Κλάσης}
+\begin{itemize}
+	\item \texttt{\_hour}: Μεταβλητή τύπου kivy.properties.StringProperty η οποία αποθηκεύει την ώρα σε μορφή "HH:MM".
+	\item \texttt{\_date}: Μεταβλητή τύπου kivy,properties.StringProperty η οποία αποθηκεύει την ημερομηνία σε μορφή "Μέρα εβδομάδας, Μήνας, Μέρα του μήνα, Χρόνος".
+\end{itemize}
+\newpage
+\noindent\textbf{Μέθοδοι Κλάσης}
+\begin{itemize}
+	\item \texttt{\_\_init\_\_()}: Συνάρτηση δόμησης της κλάσης η οποία καλή την συνάρτηση δόμησης της κλάσης \texttt{kivy.uix.widget.Widget} μέσω του \texttt{super} και καλεί την συνάρτηση \texttt{schedule\_interval}\footnote{\href{https://kivy.org/doc/stable/api-kivy.clock.html\#kivy.clock.CyClockBase.schedule\_interval}{https://kivy.org/doc/stable/api-kivy.clock.html\#kivy.clock.CyClockBase.schedule\_interval}} της κλάσης \texttt{kivy.clock.Clock} με χρόνο 1 sec η οποία καλεί με την σειρά της περιοδικά την συνάρτηση για την ανανέωση του χρόνου. Με αυτόν τον τρόπο η ώρα ανανεώνεται κάθε δευτερόλεπτο.
+	\item \texttt{\_update\_time(dt: int)}: Συνάρτηση η οποία διαβάζει την ώρα μέσω της standard βιβλιοθήκης datetime\footnote{\href{https://docs.python.org/3/library/datetime.html}{https://docs.python.org/3/library/datetime.html}} της Python και θέτει τις δύο μεταβλητές \texttt{\_hour} και \texttt{\_date} στις κατάλληλες τιμές.
 \end{itemize}
