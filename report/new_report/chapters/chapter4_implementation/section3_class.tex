@@ -226,3 +226,41 @@
 	\item \texttt{\_\_init\_\_()}: Συνάρτηση δόμησης της κλάσης η οποία καλή την συνάρτηση δόμησης της κλάσης \texttt{kivy.uix.widget.Widget} μέσω του \texttt{super} και καλεί την συνάρτηση \texttt{schedule\_interval}\footnote{\href{https://kivy.org/doc/stable/api-kivy.clock.html\#kivy.clock.CyClockBase.schedule\_interval}{https://kivy.org/doc/stable/api-kivy.clock.html\#kivy.clock.CyClockBase.schedule\_interval}} της κλάσης \texttt{kivy.clock.Clock} με χρόνο 1 sec η οποία καλεί με την σειρά της περιοδικά την συνάρτηση για την ανανέωση του χρόνου. Με αυτόν τον τρόπο η ώρα ανανεώνεται κάθε δευτερόλεπτο.
 	\item \texttt{\_update\_time(dt: int)}: Συνάρτηση η οποία διαβάζει την ώρα μέσω της standard βιβλιοθήκης datetime\footnote{\href{https://docs.python.org/3/library/datetime.html}{https://docs.python.org/3/library/datetime.html}} της Python και θέτει τις δύο μεταβλητές \texttt{\_hour} και \texttt{\_date} στις κατάλληλες τιμές.
 \end{itemize}
+
+\newpage
+\subsection{Weather}
+\begin{figure}[h]
+	\centering
+	\includegraphics[scale=0.65]{images/chapter4/uml_diagrams/Weather.png}
+	\caption{UML της κλάσης Weather}
+	\label{fig:Weather}
+\end{figure}
+\noindent\textbf{Περιγραφή Κλάσης}
+
+Η κλάση αυτή κληρονομεί από την κλάση Widget \footnote{\href{https://kivy.org/doc/stable/api-kivy.uix.widget.html}{https://kivy.org/doc/stable/api-kivy.uix.widget.html}} που περιέχεται στο πακέτο \texttt{kivy.uix.widget} και υλοποιεί ένα παράθυρο που δείχνει τον καιρό στην αρχική οθόνη του καθρέφτη αλλά και διάφορες συναρτήσεις για την πληροφόρηση σχετικά με τις καιρικές συνθήκες. Στο Σχήμα \ref{fig:weather_widget} φαίνεται γραφικά το συγκεκριμένο Widget.
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[scale=0.7]{images/chapter4/weather_widget.png}
+	\caption{Γραφική αναπαράσταση του Widget Weather}
+	\label{fig:weather_widget}
+\end{figure}
+
+\noindent\textbf{Χαρακτηριστικά Κλάσης}
+\begin{itemize}
+	\item \texttt{\_temperature}: Μεταβλητή που αποθηκεύει την τιμή της θερμοκρασίας για να εμφανιστεί στο Widget.
+	\item \texttt{\_icon}: Μεταβλητή που αποθηκεύει το URL της εικόνας που αντιστοιχεί στον καιρό.
+	\item \texttt{\_description}: Μεταβλητή που αποθηκεύει μια πρόταση η οποία περιγράφει τον καιρό.
+	\item \texttt{\_api\_key}: Μεταβλητή τύπου kivy.properties.ConfigParserProperty\footnote{\href{https://kivy.org/doc/stable/api-kivy.properties.html\#kivy.properties.ConfigParserProperty}{https://kivy.org/doc/stable/api-kivy.properties.html\#kivy.properties.ConfigParserProperty}} η οποία διαβάζει από τις ρυθμίσει το κλειδί πρόσβασης για την αλληλεπίδραση με το OpenWeather\footnote{\href{https://openweathermap.org/}{https://openweathermap.org/}} API.
+	\item \texttt{\_city\_id}: Μεταβλητή τύπου kivy.properties.ConfigParserProperty η οποία διαβάζει το id της πόλης που επιθυμεί ο χρήστης να ενημερωθεί για τον καιρό από τις ρυθμίσεις.
+	\item \texttt{\_city\_name}: Μεταβλητή τύπου kivy.properties.ConfigParserProperty η οποία διαβάζει το όνομα της πόλης που επιθυμεί ο χρήστης να ενημερωθεί για τον καιρό από τις ρυθμίσεις.
+	\item \texttt{\_update\_interval}: Μεταβλητή τύπου kivy.properties.ConfigParserProperty η οποία διαβάζει από τις ρυθμίσεις τη χρονική περίοδο στην οποία επιθυμεί ο χρήστης να γίνεται ανανέωση του καιρού.
+	\item \texttt{\_update\_interval}: Μεταβλητή τύπου kivy.config.ConfigParser η οποία χρησιμοποιείται για την ανάγνωση των ρυθμίσεων του καθρέφτη.
+	\item \texttt{\_lon}: Μεταβλητή τύπου int που αποθηκεύει το γεωγραφικό μήκος της πόλης για την οποία επιθυμεί ο χρήστης να ενημερωθεί για τον καιρό.
+	\item \texttt{\_lat}: Μεταβλητή τύπου int που αποθηκεύει το γεωγραφικό πλάτος της πόλης για την οποία επιθυμεί ο χρήστης να ενημερωθεί για τον καιρό.
+\end{itemize}
+
+\noindent\textbf{Μέθοδοι Κλάσης}
+\begin{itemize}
+	\item \texttt{\_\_init\_\_()}:
+\end{itemize}
