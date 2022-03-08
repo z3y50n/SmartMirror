@@ -9,7 +9,6 @@
   \textbf{\Large{Title}}
   \vspace{0.5cm}
 
-  %\textbf{\large{Simultaneous Localization \& Mapping Combining \\Particle Filters, Critical Rays Scan Match \& Topological Information}}
   \textbf{\large{Implementation of interface for smart mirror with capabilities of poze estimation for personalized exercise and well-being applications}}
 
   \vspace{1cm}
@@ -23,23 +22,25 @@
   \vspace{2cm}
   Zacharopoulos Filippos \& Papageorgiou Dimitrios
   \\
-  Intelligent Systems and Software Engineering Labgroup (ISSEL)
+  Signal Processing and Biomedical Technology Unit
   \\
   Electrical \& Computer Engineering Department,
   \\
   Aristotle University of Thessaloniki, Greece
   \\
-  September 2021
+  February 2022
 \end{flushright}
 
 }
 
-Internet of Things (\textit{IoT}) is a field that is evolving rapidly, especially in recent years. There is the possibility of developing even more applications which prove to be useful for many people, whether they have to do with simple functions in automation systems, or with larger scale applications in the industry. Therefore, more and more people want to work in this field.
+The cost reduction of embedded devices as well as the progress in technologies pertaining the Internet of Things (\textit{IoT}) have caused a blast in smart devices development. These devices are proving to be useful for many people since they can automate their tasks and improve their quality of life.
 
-The process of developing an IoT system involves code development to control the system's devices. In fact, in most cases fast response is of the utmost importance, so low-level code development is required, as well as the use of real-time operating systems (\textit{RTOS}). Also, due to the great heterogeneity of IoT devices on the market, it is necessary to understand the capabilities that each device can offer, in order to make the appropriate choice of one, tailored to the needs of the system to be implemented.
+The smart mirror constitutes such a smart device that comes to augment the capabilities of the classic mirror. By adding a monitor behind a reflective, partially transparent, surface it is feasible to show information in parallel with the human idol, while using a microprocessor and sensors the mirror can obtain logic for achieving useful operations for the user.
 
-These requirements may seem complicated to some users, especially to people who are technologically untrained, i.e. do not have the necessary programming skills, but still want to build an IoT system e.g. for their personal use. This results in a large portion of people wanting to get involved with IoT, being discouraged to do so.
+The development, however, of applications that concern daily activities such as news briefing, getting reminders and receiving emails are not very easily satisfied from a device such as the smart mirror. The gratification of the above tasks is covered more efficiently and easier by other devices like a smart phone or a computer. For this reason the smart mirror isn't commercially spread up to this date.
 
-Model Driven Engineering (\textit{MDE}) is here to solve the problems that, those who want to get involved with IoT, may face, but also to simplify the software production process in general, as it can provide the developing of IoT systems to a more abstract level, which is more user friendly.
+Nevertheless, the smart mirror can be utilized in the fields of health and well-being. The previous statement is backed by the fact that a human is using the classic mirror to receive feedback regarding himself and the status of their current health, for example they are watching how pale their skin is or how correct they execute on physical exercise. Therefore, the smart mirror can be installed in gym spaces, medical clinics and also operate like a personal health assistant at home.
 
-Through this diploma thesis, one is given the opportunity to describe, using models, IoT devices, through two domain specific Languages (\textit{DSL}) developed for the description of devices and the connections between them. From the models, a Model-to-Text (\textit{M2T}) transformation is performed for the automated code generation, for a variety of IoT devices, adapted to the characteristics that the user wishes for it to have. The software for controlling the IoT devices that is produced implements the process of taking measurements from sensors, and sending them to a \textit{broker}, but also the process of controlling actuators through the broker. It also consists of low-level code, as it has been designed according to the requirements of a real time operating system, named RIOT. Finally, a Model-to-Model (\textit{M2M}) transformation takes place in order to produce diagrams that provide a visualization and thus a better understanding by the user, of the wiring and intercommunication of their system.
+The two major problems that arise from the use of the smart mirror are the lack of existence of a widely used operating system and the easy interaction between the human. On one hand, the implementation of a universally accepted operating system will help easy the development and extension of applications on top of the smart mirror, much like the same way that android has helped with the development of smart phones. On the other hand, easy usage and communication with the smart mirror can contribute in its extended adoption.
+
+This diploma thesis implements a lightweight modular operating system on top of which one can develop applications for the smart mirror. Additionally, the interaction between human and smart mirror is achieved using voice commands, which the system is capable of recognizing and executing the desired actions. Apart from that, an application for controlling the correctness of a physical exercise was developed, which relies on pose estimation technology. Lastly, we propose various extensions and ideas for further development and improvement of the smart mirror.
