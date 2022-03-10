@@ -21,7 +21,6 @@
 \noindent\textbf{Περιγραφή Κλάσης}
 
 Η κλάση αυτή κληρονομεί από την κλάση kivy.app.App\footnote{\href{https://kivy.org/doc/stable/api-kivy.app.html\#kivy.app.App}{https://kivy.org/doc/stable/api-kivy.app.html\#kivy.app.App}} η οποία είναι η βασική κλάση για την δημιουργία μιας Kivy εφαρμογής. Μέσως αυτής της κλάσης ελέγχουμε την γραφική εφαρμογή και όταν όλα είναι έτοιμα ξεκινάμε τον κύκλο ζωής της εφαρμογής καλώντας την μέθοδο \texttt{SmartMirrorApp().run()}.
-\newpage
 \noindent\textbf{Χαρακτηριστικά Κλάσης}
 \begin{itemize}
     \item \texttt{controller}: Αντικείμενο τύπου Controller για την ενεργοποίηση του thread ελέγχου.
@@ -85,6 +84,7 @@
     \caption{UML της κλάσης Controller}
     \label{fig:controller}
 \end{figure}
+\newpage
 \noindent\textbf{Περιγραφή Κλάσης}
 
 Η κλάση αυτή κληρονομεί από την κλάση threading.Thread\footnote{\href{https://docs.python.org/3/library/threading.html\#threading.Thread}{https://docs.python.org/3/library/threading.html\#threading.Thread}}. O controller είναι ένα ανεξάρτητο thread από το main thread στο οποίο τρέχει η γραφική εφαρμογή και είναι υπεύθυνος για τον έλεγχο των λειτουργιών του συστήματος. Μέσα από αυτήν την κλάση ελέγχεται η ροή του προγράμματος, επιλέγονται οι ενέργειες που θα εκτελέσει ο καθρέφτης και ανανεώνεται το γραφικό περιβάλλον με βάση τις εντολές του χρήστη.
