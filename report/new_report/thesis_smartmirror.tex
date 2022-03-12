@@ -1,0 +1,40 @@
+% !TeX document-id = {6f4ea672-8c34-4eaa-abd5-02fafc5e76fe}
+\documentclass[a4paper,12 pt,twoside]{report}
+\usepackage{fullpage}
+
+\usepackage{mystyle}
+\usepackage{minted}
+\usepackage{wrapfig}
+\begin{document}
+
+\input{./chapters/chapter0.tex}
+
+\newevenside
+%\newevenside
+
+\pagenumbering{arabic}
+
+\input{./chapters/chapter1.tex}
+%\newevenside
+
+%\newevenside
+%\label{part:state_of_the_art}
+
+\input{./chapters/chapter2.tex}
+\input{./chapters/chapter3.tex}
+\input{./chapters/chapter4.tex}
+\input{./chapters/chapter5.tex}
+\input{./chapters/chapter6.tex}
+
+%%%Bibliography
+
+%\newevenside
+%\addcontentsline{toc}{chapter}{Βιβλιογραφία} %Added with tocbibind package
+\renewcommand{\bibname}{Βιβλιογραφία}
+%\bibliography{./bibliography/related_work.bib,./bibliography/iot.bib,./bibliography/rtos.bib,./bibliography/tools.bib,./bibliography/mde.bib}
+\bibliography{./bibliography/reference.bib}
+
+\input{./chapters/appendix.tex}
+
+\end{document}
+

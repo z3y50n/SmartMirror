@@ -168,7 +168,7 @@ class HMRThread(MLThread):
 
         self._cap_source = source
         if self._cap_source == "cam":
-            self._capture = cv2.VideoCapture(0)
+            self._capture = cv2.VideoCapture(2)
         else:
             if os.path.exists(self._cap_source):
                 self._capture = cv2.VideoCapture(self._cap_source)

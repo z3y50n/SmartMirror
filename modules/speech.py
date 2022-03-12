@@ -41,7 +41,7 @@ class Speech:
         return self._text
 
     def speak_back(self, text):
-        tts = gTTS(text=text, lang="en")
+        tts = gTTS(text=text, lang="en", tld="co.in")
         tts.save("temp.mp3")
         speech = AudioSegment.from_mp3("temp.mp3")
         play(speech)
