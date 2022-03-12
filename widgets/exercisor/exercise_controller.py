@@ -79,7 +79,7 @@ class ExerciseController(Observable):
             self.rules[exercise_name].attach(self)
             self.undo_edit[exercise_name] = {}
 
-        self.rules["w_y_stretch"][38] = ("fixed", 20)
+        # self.rules["w_y_stretch"][38] = ("fixed", 20)
 
     def _apply_rule(self, theta_indx, rule_type, angles):
         if rule_type == "fixed":

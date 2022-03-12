@@ -69,6 +69,7 @@ class SmartMirrorApp(App):
         for kv in os.listdir(WIDGET_PATH):
             Builder.load_file(os.path.join(WIDGET_PATH, kv, f"{kv}.kv"))
         self.settings_cls = SettingsWithSidebar
+        Window.borderless = True
         return MainPage()
 
     def subscribe(self):

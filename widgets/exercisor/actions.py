@@ -494,7 +494,7 @@ class PlayAction(AbstractAction):
         """Calculate the errors and play the feedback animations"""
         rep_mse = np.square(self._kpnt_err_vecs).mean()
         # kpnts_mse = np.square(self._kpnt_err_vecs).mean(axis=0)
-        if rep_mse < 0.03:
+        if rep_mse < 0.015:
             self.renderer.play_animation("correct_repetition")
 
         print(f"Repetition: {self._rep_count} , total error: {rep_mse}")
